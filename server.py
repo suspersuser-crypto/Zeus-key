@@ -2,17 +2,22 @@ import json, time, os
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
-KEYS_FILE = 'keys.json'
 
 def load_keys():
-    if not os.path.exists(KEYS_FILE):
+    raw = os.environ.get('KEYS_JSON', '{}')
+    try:
+        return json.loads(raw)
+    except Exception:
         return {}
-    with open(KEYS_FILE, 'r') as f:
-        return json.load(f)
 
 def save_keys(keys):
-    with open(KEYS_FILE, 'w') as f:
-        json.dump(keys, f, indent=2)
+    # сохраняем локально в файл (на случай перезапуска в рамках сессии)
+    # но главный источник — env переменная KEYS_JSON на Render
+    try:
+        with open('keys_runtime.json', 'w') as f:
+            json.dump(keys, f, indent=2)
+    except:
+        pass
 
 @app.route('/')
 def index():
