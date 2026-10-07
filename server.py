@@ -4,6 +4,12 @@ import os
 from flask import Flask, request, jsonify
 
 app = Flask(__name__)
+@app.after_request
+def add_cors_headers(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'GET, POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
 
 KEYS_FILE = 'keys.json'
 MAX_ACTIVATIONS = 50
