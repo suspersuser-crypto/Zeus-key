@@ -37,7 +37,9 @@ def generate_random_key():
         return ''.join(random.choices(string.ascii_uppercase + string.digits, k=n))
     return f"VANTA-{part(4)}-{part(4)}-{part(4)}"
 
-def generate_keys_db(count=50, min_days=1, max_days=20, admin_key="zeushack"):
+def generate_keys_db(count=50, min_days=1, max_days=20, admin_key=None):
+    if admin_key is None:
+        admin_key = os.environ.get("ADMIN_KEY", "zeushack")
     db = {
         "admin_key": admin_key,
         "activations_left": count,
