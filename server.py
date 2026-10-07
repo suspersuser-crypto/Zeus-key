@@ -11,7 +11,7 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
 
-KEYS_FILE = 'keys.json'
+KEYS_FILE = '/etc/secrets/keys.json'
 MAX_ACTIVATIONS = 50
 
 # ============================================================
