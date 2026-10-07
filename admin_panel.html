@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeus-X · Admin Panel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: radial-gradient(ellipse at top, #1a0f2e 0%, #0a0612 60%);
+    color: #ebe1fa;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .container { max-width: 1000px; margin: 0 auto; }
+  h1 {
+    font-size: 28px;
+    background: linear-gradient(135deg, #8c5aff 0%, #dc96ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 24px;
+    letter-spacing: 2px;
+  }
+  .login-box {
+    background: rgba(26, 15, 46, 0.6);
+    border: 1px solid #6b46c2;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 420px;
+    margin: 80px auto;
+    text-align: center;
+  }
+  .login-box input {
+    width: 100%;
+    padding: 14px;
+    background: #0a0612;
+    border: 1px solid #6b46c2;
+    border-radius: 10px;
+    color: #ebe1fa;
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+  .btn {
+    background: linear-gradient(135deg, #6b3fc2, #b482ff);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 14px;
+    letter-spacing: 1px;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn.red { background: linear-gradient(135deg, #8a2030, #d84060); }
+  .btn.green { background: linear-gradient(135deg, #2a8f5a, #4ecca0); }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: rgba(26, 15, 46, 0.6);
+    border: 1px solid #6b46c2;
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .stat .label { color: #a195c1; font-size: 12px; margin-bottom: 6px; letter-spacing: 1px; }
+  .stat .value { font-size: 24px; font-weight: 800; color: #b482ff; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(26, 15, 46, 0.6);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(107, 70, 194, 0.3);
+    font-size: 13px;
+  }
+  th { background: rgba(38, 22, 62, 0.8); color: #b482ff; font-weight: 700; }
+  tr:hover { background: rgba(140, 90, 255, 0.08); }
+  .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+  .dot.green { background: #4ecca0; box-shadow: 0 0 8px #4ecca0; }
+  .dot.red { background: #ff6b8a; box-shadow: 0 0 8px #ff6b8a; }
+  .dot.grey { background: #666; }
+  .actions { display: flex; gap: 6px; }
+  .actions button {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    color: white;
+  }
+  #panel { display: none; }
+  .error { color: #ff6b8a; margin-top: 12px; font-size: 13px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="login-box" id="loginBox">
+    <h1>ZEUS-X</h1>
+    <p style="color: #a195c1; margin-bottom: 20px;">admin panel · login required</p>
+    <input type="text" id="loginInput" placeholder="логин" autocomplete="off" />
+    <input type="password" id="pwdInput" placeholder="пароль" />
+    <button class="btn" onclick="doLogin()">войти</button>
+    <p class="error" id="loginError"></p>
+  </div>
+
+  <div id="panel">
+    <h1>ZEUS-X · Admin</h1>
+    <div style="text-align: right; margin-bottom: 12px;">
+      <button class="btn" onclick="logout()" style="padding: 8px 16px; font-size: 12px;">выход</button>
+    </div>
+    <div class="stats" id="statsBox"></div>
+    <table>
+      <thead>
+        <tr>
+          <th>Ключ</th>
+          <th>Статус</th>
+          <th>IP</th>
+          <th>Юзер</th>
+          <th>Активирован</th>
+          <th>Дней</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="keysBody"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const SERVER = 'https://zeus-key-mjep.onrender.com';
+  let login = '';
+  let pwd = '';
+
+  function doLogin() {
+    login = document.getElementById('loginInput').value.trim();
+    pwd = document.getElementById('pwdInput').value;
+
+    fetch(SERVER + '/admin/login?login=' + encodeURIComponent(login) + '&pwd=' + encodeURIComponent(pwd))
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) {
+          sessionStorage.setItem('z_login', login);
+          sessionStorage.setItem('z_pwd', pwd);
+          showPanel();
+        } else {
+          const errors = {
+            wrong_credentials: 'неверный логин или пароль',
+            too_many_attempts: 'слишком много попыток, подожди 1 час',
+            admin_password_not_set: 'пароль админки не установлен на сервере',
+          };
+          document.getElementById('loginError').textContent = errors[data.reason] || 'ошибка';
+        }
+      })
+      .catch(() => {
+        document.getElementById('loginError').textContent = 'сервер не отвечает';
+      });
+  }
+
+  function logout() {
+    sessionStorage.removeItem('z_login');
+    sessionStorage.removeItem('z_pwd');
+    login = '';
+    pwd = '';
+    document.getElementById('panel').style.display = 'none';
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('loginInput').value = '';
+    document.getElementById('pwdInput').value = '';
+  }
+
+  function showPanel() {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('panel').style.display = 'block';
+    loadKeys();
+  }
+
+  function loadKeys() {
+    fetch(SERVER + '/admin/keys?login=' + encodeURIComponent(login) + '&pwd=' + encodeURIComponent(pwd))
+      .then(r => r.json())
+      .then(data => {
+        if (!data.ok) {
+          if (data.reason === 'too_many_attempts' || data.reason === 'wrong_credentials') logout();
+          return;
+        }
+
+        document.getElementById('statsBox').innerHTML = `
+          <div class="stat"><div class="label">АКТИВАЦИЙ ОСТАЛОСЬ</div><div class="value">${data.activations_left}</div></div>
+          <div class="stat"><div class="label">ВСЕГО КЛЮЧЕЙ</div><div class="value">${data.total_keys}</div></div>
+        `;
+
+        const tbody = document.getElementById('keysBody');
+        tbody.innerHTML = '';
+
+        const sorted = data.keys.sort((a, b) => {
+          const order = { green: 0, red: 1, grey: 2 };
+          return order[a.status] - order[b.status];
+        });
+
+        sorted.forEach(k => {
+          const tr = document.createElement('tr');
+          let statusText = 'не активен';
+          if (k.banned) statusText = 'забанен';
+          else if (k.expired) statusText = 'истёк';
+          else if (k.used) statusText = 'активен';
+
+          const activated = k.activated_at
+            ? new Date(k.activated_at * 1000).toLocaleString('ru-RU')
+            : '—';
+
+          tr.innerHTML = `
+            <td style="font-family: monospace; font-size: 11px;">${k.key}</td>
+            <td><span class="dot ${k.status}"></span>${statusText}</td>
+            <td>${k.ip || '—'}</td>
+            <td>${k.username || '—'}</td>
+            <td>${activated}</td>
+            <td>${k.days_left}</td>
+            <td class="actions">
+              ${k.banned
+                ? `<button class="green" onclick="unban('${k.key}')">разбан</button>`
+                : `<button class="red" onclick="ban('${k.key}')">бан</button>`}
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+  }
+
+  function ban(key) {
+    fetch(SERVER + '/admin/ban?login=' + encodeURIComponent(login) + '&pwd=' + encodeURIComponent(pwd) + '&key=' + encodeURIComponent(key))
+      .then(r => r.json())
+      .then(() => loadKeys());
+  }
+
+  function unban(key) {
+    fetch(SERVER + '/admin/unban?login=' + encodeURIComponent(login) + '&pwd=' + encodeURIComponent(pwd) + '&key=' + encodeURIComponent(key))
+      .then(r => r.json())
+      .then(() => loadKeys());
+  }
+
+  // авто-обновление раз в 15 сек
+  setInterval(() => {
+    if (document.getElementById('panel').style.display === 'block') {
+      loadKeys();
+    }
+  }, 15000);
+
+  // авто-логин если в sessionStorage есть
+  const savedLogin = sessionStorage.getItem('z_login');
+  const savedPwd = sessionStorage.getItem('z_pwd');
+  if (savedLogin && savedPwd) {
+    login = savedLogin;
+    pwd = savedPwd;
+    showPanel();
+  }
+</script>
+
+</body>
+</html>
