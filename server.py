@@ -218,9 +218,6 @@ def admin_keys():
         "total_keys": len(keys),
         "keys": result
     })
-
-@app.route('/admin/regenerate')
-def admin_regenerate():
     ok, reason = check_admin_auth()
     if not ok:
         return jsonify({"ok": False, "reason": reason})
