@@ -292,9 +292,13 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
 
-# при первом запуске создаём таблицы
-with app.app_context():
-    try:
-        init_db()
-    except Exception as e:
-        print("[init_db error]", e)
+# инициализация базы при импорте (для gunicorn)
+try:
+    init_db()
+    print("[vanta] database initialized")
+except Exception as e:
+    print("[init_db error]", e)
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
