@@ -14,7 +14,7 @@ def add_cors_headers(response):
     response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
     return response
 
-KEYS_FILE = os.environ.get('KEYS_FILE', '/etc/secrets/keys.json')
+KEYS_FILE = os.environ.get('KEYS_FILE', 'keys.json')
 MAX_ACTIVATIONS = 50
 ADMIN_LOGIN = os.environ.get("ADMIN_LOGIN", "admin")
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
