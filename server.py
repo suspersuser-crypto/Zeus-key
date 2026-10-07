@@ -233,6 +233,20 @@ def admin_regenerate():
         "activations_left": db["activations_left"],
         "total_keys": len(db["keys"])
     })
+@app.route('/admin/regenerate')
+def admin_regenerate():
+    ok, reason = check_admin_auth()
+    if not ok:
+        return jsonify({"ok": False, "reason": reason})
+    db = generate_keys_db()
+    save_db(db)
+    return jsonify({
+        "ok": True,
+        "message": "50 ключей сгенерированы заново",
+        "activations_left": db["activations_left"],
+        "total_keys": len(db["keys"])
+    })
+
 
 @app.route('/admin/ban')
 def admin_ban():
