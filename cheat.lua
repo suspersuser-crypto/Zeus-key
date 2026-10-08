@@ -3958,14 +3958,14 @@ print("  2. сервер доступен: zeus-key-mjep.onrender.com")
 print("  3. в консоли есть [zeusx] сообщения")
 print("============================================")
 -- ============================================================
--- ДОПОЛНИТЕЛЬНО: toggle menu по клавише RIGHT CONTROL
+-- toggle menu по клавише Q
 -- ============================================================
 
 getgenv().vanta_menu_visible = true
 
 UIS.InputBegan:Connect(function(i, gpe)
     if gpe then return end
-    if i.KeyCode == Enum.KeyCode.RightControl then
+    if i.KeyCode == Enum.KeyCode.Q then
         getgenv().vanta_menu_visible = not getgenv().vanta_menu_visible
         local menu = getgenv().vanta_menu
         if menu then
@@ -3974,4 +3974,4 @@ UIS.InputBegan:Connect(function(i, gpe)
     end
 end)
 
-getgenv().zeusx_log("toggle", "RightCtrl = show/hide menu")
+getgenv().zeusx_log("toggle", "Q = show/hide menu")
