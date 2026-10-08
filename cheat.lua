@@ -231,7 +231,7 @@ getgenv().zeusx_log("part", "1/25 OK")-- =======================================
 -- Zeus-X v10.3 · ЧАСТЬ 2/25 — config save/load + notify
 -- ============================================================
 
-local CFG_DIR = "zeusx"
+CFG_DIR = CFG_DIR or "zeusx"
 
 local function deep_copy(t)
     local c = {}
