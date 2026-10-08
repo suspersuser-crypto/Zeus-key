@@ -3957,3 +3957,21 @@ print("  1. executor поддерживает http/JSON")
 print("  2. сервер доступен: zeus-key-mjep.onrender.com")
 print("  3. в консоли есть [zeusx] сообщения")
 print("============================================")
+-- ============================================================
+-- ДОПОЛНИТЕЛЬНО: toggle menu по клавише RIGHT CONTROL
+-- ============================================================
+
+getgenv().vanta_menu_visible = true
+
+UIS.InputBegan:Connect(function(i, gpe)
+    if gpe then return end
+    if i.KeyCode == Enum.KeyCode.RightControl then
+        getgenv().vanta_menu_visible = not getgenv().vanta_menu_visible
+        local menu = getgenv().vanta_menu
+        if menu then
+            menu.Enabled = getgenv().vanta_menu_visible
+        end
+    end
+end)
+
+getgenv().zeusx_log("toggle", "RightCtrl = show/hide menu")
