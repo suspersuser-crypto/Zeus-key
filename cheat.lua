@@ -3958,20 +3958,37 @@ print("  2. сервер доступен: zeus-key-mjep.onrender.com")
 print("  3. в консоли есть [zeusx] сообщения")
 print("============================================")
 -- ============================================================
--- toggle menu по клавише Q
+-- ДИАГНОСТИКА + toggle menu
+-- ============================================================
+
+task.spawn(function()
+    task.wait(2)
+    print("[diag] === ДИАГНОСТИКА ===")
+    print("[diag] vanta_menu:", getgenv().vanta_menu)
+    print("[diag] parent:", getgenv().zeusx_getParent and getgenv().zeusx_getParent())
+    if getgenv().vanta_menu then
+        print("[diag] menu.Enabled:", getgenv().vanta_menu.Enabled)
+        print("[diag] menu.Parent:", getgenv().vanta_menu.Parent)
+        print("[diag] menu.DisplayOrder:", getgenv().vanta_menu.DisplayOrder)
+        print("[diag] menu.Parent.Name:", getgenv().vanta_menu.Parent.Name)
+    end
+end)
+
+-- ============================================================
+-- toggle menu: F8
 -- ============================================================
 
 getgenv().vanta_menu_visible = true
 
 UIS.InputBegan:Connect(function(i, gpe)
     if gpe then return end
-    if i.KeyCode == Enum.KeyCode.Q then
+    if UIS:GetFocusedTextBox() then return end
+    if i.KeyCode == Enum.KeyCode.F8 then
         getgenv().vanta_menu_visible = not getgenv().vanta_menu_visible
         local menu = getgenv().vanta_menu
         if menu then
             menu.Enabled = getgenv().vanta_menu_visible
+            getgenv().vanta_notify("menu: " .. tostring(getgenv().vanta_menu_visible), 1.5)
         end
     end
 end)
-
-getgenv().zeusx_log("toggle", "Q = show/hide menu")
