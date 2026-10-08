@@ -2991,6 +2991,138 @@ getgenv().zeusx_build_tabs_move_vis_team = function()
 
     getgenv().zeusx_log("part", "15/25 OK · tabs move/vis/team")
 end-- ============================================================
+-- Zeus-X v10.6 · ЧАСТЬ 16/25 — табы misc + ui
+-- ============================================================
+
+getgenv().zeusx_build_tabs_misc_ui = function()
+    local ctx = getgenv().zeusx_menu_ctx
+    if not ctx or not ctx.scroll then return end
+    local A = ctx.A
+    local Config = ctx.Config
+    local scroll = ctx.scroll
+    local makeTab = ctx.makeTab
+    local section = ctx.section
+    local toggle = ctx.toggle
+    local slider = ctx.slider
+    local dropdown = ctx.dropdown
+    local tweenQuad = ctx.tweenQuad
+
+    local function inputBox(label, get, set, placeholder)
+        local row = Instance.new("Frame")
+        row.Size = UDim2.new(1, -10, 0, 36); row.BackgroundColor3 = A.panel
+        row.BackgroundTransparency = 0.55; row.BorderSizePixel = 0; row.Parent = scroll
+        Instance.new("UICorner", row).CornerRadius = UDim.new(0, 10)
+        local s = Instance.new("UIStroke"); s.Color = A.accent; s.Thickness = 1; s.Transparency = 0.8; s.Parent = row
+        local lbl = Instance.new("TextLabel")
+        lbl.Size = UDim2.new(0, 120, 1, 0); lbl.Position = UDim2.new(0, 12, 0, 0)
+        lbl.BackgroundTransparency = 1; lbl.Text = label; lbl.TextColor3 = A.text
+        lbl.Font = Enum.Font.Gotham; lbl.TextSize = 13
+        lbl.TextXAlignment = Enum.TextXAlignment.Left; lbl.Parent = row
+        local tb = Instance.new("TextBox")
+        tb.Size = UDim2.new(1, -150, 0, 24); tb.Position = UDim2.new(0, 140, 0.5, -12)
+        tb.BackgroundColor3 = Color3.fromRGB(28,20,44); tb.BackgroundTransparency = 0.2
+        tb.BorderSizePixel = 0; tb.Text = get() or ""
+        tb.PlaceholderText = placeholder or "text"
+        tb.TextColor3 = A.text
+        tb.PlaceholderColor3 = Color3.fromRGB(130,115,165)
+        tb.Font = Enum.Font.Gotham; tb.TextSize = 13
+        tb.ClearTextOnFocus = true; tb.Parent = row
+        Instance.new("UICorner", tb).CornerRadius = UDim.new(0, 6)
+        tb.FocusLost:Connect(function(enter)
+            if enter then set(tb.Text); tb.Text = get() or "" end
+        end)
+    end
+
+    local function button(label, cb, bg)
+        local b = Instance.new("TextButton")
+        b.Size = UDim2.new(1, -10, 0, 32)
+        b.BackgroundColor3 = bg or A.accentD
+        b.BackgroundTransparency = 0.3; b.BorderSizePixel = 0
+        b.Text = label; b.TextColor3 = A.text
+        b.Font = Enum.Font.GothamBold; b.TextSize = 13
+        b.AutoButtonColor = false; b.Parent = scroll
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 10)
+        local s = Instance.new("UIStroke"); s.Color = A.accent; s.Thickness = 1; s.Transparency = 0.6; s.Parent = b
+        b.MouseEnter:Connect(function() tweenQuad(b, 0.15, {BackgroundTransparency = 0.1, BackgroundColor3 = A.accent}) end)
+        b.MouseLeave:Connect(function() tweenQuad(b, 0.15, {BackgroundTransparency = 0.3, BackgroundColor3 = bg or A.accentD}) end)
+        b.MouseButton1Click:Connect(cb)
+    end
+
+    local tMisc = makeTab("misc")
+    tMisc.build = function()
+        section("NOTIFY")
+        toggle("kill notify", function() return Config.Misc.KillNotify end, function(v) Config.Misc.KillNotify=v end)
+        toggle("death notify", function() return Config.Misc.DeathNotify end, function(v) Config.Misc.DeathNotify=v end)
+        toggle("friend notify", function() return Config.Misc.FriendNotify end, function(v) Config.Misc.FriendNotify=v end)
+        toggle("hit marker", function() return Config.Misc.HitMarker end, function(v) Config.Misc.HitMarker=v end)
+        toggle("hit sound", function() return Config.Misc.HitSound end, function(v) Config.Misc.HitSound=v end)
+        section("CHAT")
+        toggle("chat spam", function() return Config.Misc.ChatSpam end, function(v) Config.Misc.ChatSpam=v end)
+        inputBox("spam text", function() return Config.Misc.ChatSpamText end, function(v) Config.Misc.ChatSpamText=v end)
+        slider("spam delay sec", 1, 60, function() return Config.Misc.ChatSpamDelay end, function(v) Config.Misc.ChatSpamDelay=v end)
+        section("SESSION")
+        toggle("fake lag", function() return Config.Misc.FakeLag end, function(v) Config.Misc.FakeLag=v end)
+        slider("fake lag ms", 50, 1000, function() return Config.Misc.FakeLagMs end, function(v) Config.Misc.FakeLagMs=v end)
+        toggle("fps monitor", function() return Config.Misc.FpsMonitor end, function(v) Config.Misc.FpsMonitor=v end)
+        toggle("time played", function() return Config.Misc.TimePlayed end, function(v) Config.Misc.TimePlayed=v end)
+        toggle("watermark", function() return Config.Misc.Watermark end, function(v) Config.Misc.Watermark=v end)
+        section("SERVER")
+        toggle("auto rejoin", function() return Config.Misc.AutoRejoin end, function(v) Config.Misc.AutoRejoin=v end)
+        button("server hop", function() getgenv().zeusx_serverHop() end)
+        button("rejoin", function()
+            pcall(function()
+                game:GetService("TeleportService"):Teleport(game.PlaceId, LocalPlayer)
+            end)
+        end)
+        section("ANTIBAN")
+        toggle("anti-afk", function() return Config.Anti.AntiAFK end, function(v) Config.Anti.AntiAFK=v end)
+        toggle("anti-fling", function() return Config.Anti.AntiFling end, function(v) Config.Anti.AntiFling=v end)
+        toggle("anti-void", function() return Config.Anti.AntiVoid end, function(v) Config.Anti.AntiVoid=v end)
+        toggle("stealth mode", function() return Config.Anti.StealthMode end, function(v) Config.Anti.StealthMode=v end)
+        toggle("randomization", function() return Config.Anti.Randomization end, function(v) Config.Anti.Randomization=v end)
+        toggle("hook hider", function() return Config.Anti.HookHider end, function(v)
+            Config.Anti.HookHider = v
+            if v and getgenv().zeusx_installHookHider then getgenv().zeusx_installHookHider() end
+        end)
+        slider("stealth speed cap", 20, 120, function() return Config.Anti.StealthSpeedCap end, function(v) Config.Anti.StealthSpeedCap=v end)
+        slider("stealth fly cap", 20, 200, function() return Config.Anti.StealthFlyCap end, function(v) Config.Anti.StealthFlyCap=v end)
+    end
+
+    local tUi = makeTab("ui")
+    tUi.build = function()
+        section("THEME")
+        dropdown("theme", {"purple","red","cyan","dark"}, function() return Config.UI.Theme end, function(v)
+            Config.UI.Theme = v
+            if getgenv().vanta_create_menu then
+                getgenv().vanta_create_menu()
+                if getgenv().zeusx_rebuild_all_tabs then getgenv().zeusx_rebuild_all_tabs() end
+            end
+        end)
+        toggle("compact mode", function() return Config.UI.Compact end, function(v)
+            Config.UI.Compact = v
+            if getgenv().vanta_create_menu then
+                getgenv().vanta_create_menu()
+                if getgenv().zeusx_rebuild_all_tabs then getgenv().zeusx_rebuild_all_tabs() end
+            end
+        end)
+        section("DEBUG")
+        button("dump state → console", function()
+            print("=== Zeus-X state ===")
+            for section_name, vals in pairs(Config) do
+                if type(vals) == "table" then
+                    for k, v in pairs(vals) do
+                        if type(v) == "boolean" and v then
+                            print(section_name .. "." .. k .. " = true")
+                        end
+                    end
+                end
+            end
+            getgenv().vanta_notify("state dumped", 2)
+        end)
+    end
+
+    getgenv().zeusx_log("part", "16/25 OK · tabs misc/ui")
+end-- ============================================================
 -- Zeus-X v10.6 · ЧАСТЬ 17/25 — табы config + key
 -- ============================================================
 
@@ -3331,6 +3463,147 @@ getgenv().zeusx_requestHwidReset = function()
 end
 
 getgenv().zeusx_log("part", "20/25 OK · 3d box / hwid reset")-- ============================================================
+-- Zeus-X v10.6 · ЧАСТЬ 21/25 — keygate UI
+-- ============================================================
+
+local function formatTime(sec)
+    if not sec or sec < 0 then sec = 0 end
+    if sec > 1e9 then return "вечный" end
+    local d = math.floor(sec / 86400)
+    local h = math.floor((sec % 86400) / 3600)
+    local m = math.floor((sec % 3600) / 60)
+    if d > 0 then return string.format("%dд %02dч %02dм", d, h, m) end
+    return string.format("%02dч %02dм", h, m)
+end
+
+getgenv().vanta_show_keygate = function(onSuccess, message)
+    local parent = getgenv().zeusx_getParent()
+    if not parent then
+        warn("[zeusx] KEYGATE: parent GUI не найден")
+        return
+    end
+
+    local old = parent:FindFirstChild("vanta_keygui")
+    if old then old:Destroy() end
+
+    local accent = Color3.fromRGB(180, 130, 255)
+    local TG_LINK_LOCAL = "https://t.me/noir_xis"
+
+    local sg = Instance.new("ScreenGui")
+    sg.Name = "vanta_keygui"; sg.ResetOnSpawn = false
+    sg.IgnoreGuiInset = true; sg.DisplayOrder = 2000
+    sg.Parent = parent
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 380, 0, 340)
+    frame.Position = UDim2.new(0.5, -190, 0.65, -170)
+    frame.BackgroundColor3 = Color3.fromRGB(18,12,28)
+    frame.BackgroundTransparency = 0.25; frame.BorderSizePixel = 0
+    frame.Active = true; frame.Draggable = true; frame.Parent = sg
+    Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 18)
+    TweenService:Create(frame, TweenInfo.new(0.55, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0.5, -190, 0.5, -170), BackgroundTransparency = 0.1}):Play()
+
+    local stroke = Instance.new("UIStroke")
+    stroke.Color = accent; stroke.Thickness = 1.4; stroke.Transparency = 0.3; stroke.Parent = frame
+    local grad = Instance.new("UIGradient")
+    grad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(140,90,255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(220,150,255)),
+    }
+    grad.Rotation = 35; grad.Parent = stroke
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 52); title.BackgroundTransparency = 1
+    title.Text = "ZEUS-X"; title.TextColor3 = accent
+    title.Font = Enum.Font.GothamBold; title.TextSize = 26; title.Parent = frame
+
+    local sub = Instance.new("TextLabel")
+    sub.Size = UDim2.new(1, 0, 0, 18); sub.Position = UDim2.new(0, 0, 0, 50)
+    sub.BackgroundTransparency = 1; sub.Text = "введите ключ доступа"
+    sub.TextColor3 = Color3.fromRGB(180,160,220)
+    sub.Font = Enum.Font.Gotham; sub.TextSize = 13; sub.Parent = frame
+
+    local box = Instance.new("TextBox")
+    box.Size = UDim2.new(1, -40, 0, 44); box.Position = UDim2.new(0, 20, 0, 84)
+    box.BackgroundColor3 = Color3.fromRGB(38,28,58); box.BackgroundTransparency = 0.3
+    box.BorderSizePixel = 0; box.Text = ""
+    box.PlaceholderText = "ключ..."
+    box.TextColor3 = Color3.fromRGB(235,225,250)
+    box.PlaceholderColor3 = Color3.fromRGB(140,120,180)
+    box.Font = Enum.Font.Gotham; box.TextSize = 15
+    box.ClearTextOnFocus = false; box.Parent = frame
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 10)
+
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -40, 0, 44); btn.Position = UDim2.new(0, 20, 0, 142)
+    btn.BackgroundColor3 = Color3.fromRGB(120,75,200); btn.BackgroundTransparency = 0.2
+    btn.BorderSizePixel = 0; btn.Text = "войти"
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.Font = Enum.Font.GothamBold; btn.TextSize = 15
+    btn.AutoButtonColor = false; btn.Parent = frame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+
+    local tgBtn = Instance.new("TextButton")
+    tgBtn.Size = UDim2.new(1, -40, 0, 40); tgBtn.Position = UDim2.new(0, 20, 0, 198)
+    tgBtn.BackgroundColor3 = Color3.fromRGB(30,90,140); tgBtn.BackgroundTransparency = 0.15
+    tgBtn.BorderSizePixel = 0; tgBtn.Text = "получить ключ  ·  @noir_xis"
+    tgBtn.TextColor3 = Color3.fromRGB(255,255,255)
+    tgBtn.Font = Enum.Font.GothamBold; tgBtn.TextSize = 14
+    tgBtn.AutoButtonColor = false; tgBtn.Parent = frame
+    Instance.new("UICorner", tgBtn).CornerRadius = UDim.new(0, 10)
+
+    tgBtn.MouseButton1Click:Connect(function()
+        if setclipboard then pcall(function() setclipboard(TG_LINK_LOCAL) end) end
+        tgBtn.Text = "скопировано  ·  " .. TG_LINK_LOCAL
+        task.wait(2.5); tgBtn.Text = "получить ключ  ·  @noir_xis"
+    end)
+
+    local status = Instance.new("TextLabel")
+    status.Size = UDim2.new(1, 0, 0, 16); status.Position = UDim2.new(0, 0, 0, 246)
+    status.BackgroundTransparency = 1; status.Text = message or ""
+    status.TextColor3 = Color3.fromRGB(255,120,140)
+    status.Font = Enum.Font.Gotham; status.TextSize = 12; status.Parent = frame
+
+    local timerLbl = Instance.new("TextLabel")
+    timerLbl.Size = UDim2.new(1, 0, 0, 14); timerLbl.Position = UDim2.new(0, 0, 0, 264)
+    timerLbl.BackgroundTransparency = 1; timerLbl.Text = ""
+    timerLbl.TextColor3 = Color3.fromRGB(200,180,240)
+    timerLbl.Font = Enum.Font.Gotham; timerLbl.TextSize = 11; timerLbl.Parent = frame
+
+    local hint = Instance.new("TextLabel")
+    hint.Size = UDim2.new(1, 0, 0, 14); hint.Position = UDim2.new(0, 0, 0, 282)
+    hint.BackgroundTransparency = 1; hint.Text = "ключ проверяется на сервере"
+    hint.TextColor3 = Color3.fromRGB(140,120,180)
+    hint.Font = Enum.Font.Gotham; hint.TextSize = 10; hint.Parent = frame
+
+    local function try()
+        local entered = (box.Text:gsub("%s",""))
+        if entered == "" then return end
+        status.TextColor3 = Color3.fromRGB(180,180,220)
+        status.Text = "проверка..."; btn.Text = "..."; btn.Active = false
+        local ok, left, data = getgenv().vanta_checkKey(entered)
+        btn.Active = true; btn.Text = "войти"
+        if not ok then
+            status.TextColor3 = Color3.fromRGB(255,120,140)
+            status.Text = left or "ошибка"
+            box.Text = ""
+            return
+        end
+        getgenv().vanta_set_key(entered)
+        getgenv().vanta_cfg.Key.Expiry = os.time() + (tonumber(left) or 0)
+        status.TextColor3 = Color3.fromRGB(180,255,180)
+        status.Text = "доступ разрешён"
+        timerLbl.Text = "осталось: " .. formatTime(left)
+        task.wait(1.2)
+        sg:Destroy()
+        if onSuccess then pcall(onSuccess) end
+    end
+
+    btn.MouseButton1Click:Connect(try)
+    box.FocusLost:Connect(function(e) if e then try() end end)
+end
+
+getgenv().zeusx_log("part", "21/25 OK · keygate")-- ============================================================
 -- Zeus-X v10.6 · ЧАСТЬ 22/25 — bootstrap
 -- ============================================================
 
