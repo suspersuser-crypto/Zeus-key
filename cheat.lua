@@ -21,10 +21,10 @@ local CFG_DIR    = "zeusx"
 if isfolder and not isfolder(CFG_DIR) then pcall(makefolder, CFG_DIR) end
 
 getgenv().zeusx_log = function(tag, ...)
+    local args = {...}
     pcall(function()
-        local parts = {...}
         local msg = "[zeusx][" .. tostring(tag) .. "]"
-        for _, v in ipairs(parts) do msg = msg .. " " .. tostring(v) end
+        for _, v in ipairs(args) do msg = msg .. " " .. tostring(v) end
         print(msg)
         warn(msg)
     end)
@@ -203,7 +203,6 @@ local active_key = nil
 getgenv().vanta_set_key = function(k) active_key = k; Config.Key.Active = k end
 getgenv().vanta_get_key = function() return active_key end
 
--- периодическая проверка ключа (без continue — совместимо)
 task.spawn(function()
     while task.wait(60) do
         if active_key then
