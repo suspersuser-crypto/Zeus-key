@@ -8,11 +8,30 @@ RunService   = RunService or game:GetService("RunService")
 UIS          = UIS or game:GetService("UserInputService")
 Workspace    = Workspace or game:GetService("Workspace")
 HttpService  = HttpService or game:GetService("HttpService")
-CoreGui      = CoreGui or game:GetService("CoreGui")
 TweenService = TweenService or game:GetService("TweenService")
 Lighting     = Lighting or game:GetService("Lighting")
 LocalPlayer  = LocalPlayer or Players.LocalPlayer
 Camera       = Camera or Workspace.CurrentCamera
+
+-- CoreGui в Xeno может быть заблокирован — берём через pcall
+if not CoreGui then
+    local ok, cg = pcall(function() return game:GetService("CoreGui") end)
+    if ok and cg then CoreGui = cg end
+end
+
+-- универсальная функция для родителя GUI (использовать везде)
+getgenv().zeusx_getParent = function()
+    if gethui then
+        local ok, h = pcall(gethui)
+        if ok and h then return h end
+    end
+    if CoreGui then return CoreGui end
+    if LocalPlayer then
+        local pg = LocalPlayer:FindFirstChild("PlayerGui")
+        if pg then return pg end
+    end
+    return nil
+end
 
 SERVER_URL = "https://zeus-key-mjep.onrender.com/check"
 TG_LINK    = "https://t.me/noir_xis"
@@ -184,14 +203,16 @@ getgenv().vanta_disableAll = function()
             end
         end
     end
-    local p = (gethui and gethui()) or CoreGui
-    for _, n in ipairs({"vanta_esp","vanta_menu_root","vanta_keygui","vanta_notify",
-                        "vanta_fovcircle","vanta_crosshair","vanta_notify_log",
-                        "vanta_fps","vanta_time","vanta_hitmarker","vanta_arrows",
-                        "vanta_chams","vanta_skel","vanta_freecam_hint",
-                        "vanta_emergency","vanta_box3d"}) do
-        local e = p:FindFirstChild(n)
-        if e then e:Destroy() end
+    local p = getgenv().zeusx_getParent()
+    if p then
+        for _, n in ipairs({"vanta_esp","vanta_menu_root","vanta_keygui","vanta_notify",
+                            "vanta_fovcircle","vanta_crosshair","vanta_notify_log",
+                            "vanta_fps","vanta_time","vanta_hitmarker","vanta_arrows",
+                            "vanta_chams","vanta_skel","vanta_freecam_hint",
+                            "vanta_emergency","vanta_box3d"}) do
+            local e = p:FindFirstChild(n)
+            if e then e:Destroy() end
+        end
     end
     getgenv().vanta_menu = nil
 end
