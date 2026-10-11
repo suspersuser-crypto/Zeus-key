@@ -2502,6 +2502,7 @@ if not getgenv()._zeusx_loop_started then
         -- aim & silent & fov circle
         safeCall(getgenv().zeusx_updateAim)
         safeCall(getgenv().zeusx_updateSilent)
+        safeCall(getgenv().zeusx_updateTrigger)
         safeCall(getgenv().zeusx_updateFovCircle)
         -- esp layers
         safeCall(getgenv().zeusx_renderESP)
