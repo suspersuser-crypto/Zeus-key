@@ -1190,6 +1190,432 @@ end
 getgenv().zeusx_renderChams = renderChams
 getgenv().zeusx_renderArrows = renderArrows
 getgenv().zeusx_log("part", "7/9 OK")-- ============================================================
+-- Zeus-X Lite v1.2 · TRIGGERBOT MODULE (вставить после части 7, перед 8A)
+-- авто-стрельба, универсальный режим, aim-based хитбоксы
+-- ============================================================
+
+local Players     = game:GetService("Players")
+local UIS         = game:GetService("UserInputService")
+local Workspace   = game:GetService("Workspace")
+local RunService  = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera      = Workspace.CurrentCamera
+local Config      = getgenv().zeusx_cfg
+local H           = getgenv().zeusx_h
+
+-- ============================================================
+-- ДОБАВЛЯЕМ В CONFIG TRIGGER (если ещё нет)
+-- ============================================================
+Config.Trigger = Config.Trigger or {
+    Enabled        = false,
+    Mode           = "esp-box",       -- esp-box | hitbox | pixel | universal
+    Key            = Enum.UserInputType.MouseButton1,
+    AlwaysOn       = false,
+    Delay          = 0.06,
+    AutoDelay      = true,
+    RandomizeDelay = 0.30,            -- ±% к задержке для анти-детекта
+    WallCheck      = true,
+    StrictTeam     = true,
+    FriendCheck    = true,
+    MinDist        = 0,
+    MaxDist        = 2000,
+    HpMin          = 0,
+    HpMax          = 100000,
+    PixelRadius    = 40,
+    HitboxRadius   = 45,
+    RequireTool    = true,
+    FireMode       = "both",          -- mouse1click | remoteevent | both
+    Burst          = 1,
+    BurstGapMs     = 50,
+    PrefireMs      = 0,
+    AfterKillMs    = 0,
+    RatePerSec     = 0,
+    HeadOnly       = false,
+    PreferHead     = true,
+    SmoothToggle   = false,
+    IgnoreDying    = true,
+    DyingHpPct     = 15,
+    WeaponBlacklist = {},
+    WeaponWhitelist = {},
+    WhitelistMode   = false,
+    VisibleOnly     = false,           -- только если реально видно
+    UniversalFov    = 200,             -- в universal-режиме — радиус от центра
+}
+
+local cfgT = Config.Trigger
+
+-- ============================================================
+-- STATE
+-- ============================================================
+local trigHeld         = false
+local lastShot         = 0
+local lastAutoDelay    = 0.06
+local lastKillTime     = 0
+local shotTimes        = {}
+local targetLockUntil  = 0
+local lockedTarget     = nil
+
+-- ============================================================
+-- HELPERS
+-- ============================================================
+local function inList(list, name)
+    for _, n in ipairs(list) do if n == name then return true end end
+    return false
+end
+
+local function getCurrentTool()
+    local char = LocalPlayer.Character
+    if not char then return nil end
+    return char:FindFirstChildOfClass("Tool")
+end
+
+local function triggerIgnore(m)
+    return H.shouldIgnore(m, {
+        StrictTeam  = cfgT.StrictTeam,
+        FriendCheck = cfgT.FriendCheck,
+    })
+end
+
+local function dyingCheck(m)
+    if not cfgT.IgnoreDying then return true end
+    local hum = H.getHumanoid(m)
+    if not hum then return true end
+    local pct = hum.Health / math.max(hum.MaxHealth, 1) * 100
+    return pct > cfgT.DyingHpPct
+end
+
+-- ============================================================
+-- WEAPON FILTER
+-- ============================================================
+local function toolReady(tool)
+    if not cfgT.RequireTool then
+        if tool then
+            if cfgT.WhitelistMode then
+                if #cfgT.WeaponWhitelist > 0 and not inList(cfgT.WeaponWhitelist, tool.Name) then
+                    return false
+                end
+            else
+                if inList(cfgT.WeaponBlacklist, tool.Name) then return false end
+            end
+        end
+        return true
+    end
+    if not tool then return false end
+    if not tool.Enabled then return false end
+    local ammo = tool:FindFirstChild("Ammo") or tool:FindFirstChild("AmmoValue")
+    if ammo and ammo:IsA("IntValue") and ammo.Value <= 0 then return false end
+    if cfgT.WhitelistMode then
+        if #cfgT.WeaponWhitelist > 0 and not inList(cfgT.WeaponWhitelist, tool.Name) then
+            return false
+        end
+    else
+        if inList(cfgT.WeaponBlacklist, tool.Name) then return false end
+    end
+    return true
+end
+
+-- ============================================================
+-- FIRE
+-- ============================================================
+local function fireWeapon()
+    local tool = getCurrentTool()
+    if cfgT.FireMode == "mouse1click" or cfgT.FireMode == "both" then
+        if mouse1click then pcall(mouse1click) end
+    end
+    if (cfgT.FireMode == "remoteevent" or cfgT.FireMode == "both") and tool then
+        for _, name in ipairs({"Fire","Shoot","Attack","FireWeapon","ShootEvent","FireEvent","WeaponFire"}) do
+            local r = tool:FindFirstChild(name)
+            if r and (r:IsA("RemoteEvent") or r:IsA("RemoteFunction")) then
+                pcall(function()
+                    if r:IsA("RemoteEvent") then
+                        r:FireServer()
+                    end
+                end)
+                break
+            end
+        end
+    end
+end
+
+-- ============================================================
+-- MODE 1: ESP-BOX — курсор внутри бокса цели
+-- ============================================================
+local function isCrosshairInEspBox(m)
+    local head = H.getHead(m)
+    local root = H.getRoot(m)
+    if not head or not root then return false end
+    local top = H.w2s(head.Position + Vector3.new(0, 1, 0))
+    local bot = H.w2s(root.Position - Vector3.new(0, 3, 0))
+    if not top or not bot then return false end
+    local h = bot.Y - top.Y
+    local w = h * 0.5
+    local center = Vector2.new(Camera.ViewportSize.X*0.5, Camera.ViewportSize.Y*0.5)
+    return center.X >= top.X - w/2 and center.X <= top.X + w/2
+       and center.Y >= top.Y and center.Y <= bot.Y
+end
+
+-- ============================================================
+-- MODE 2: HITBOX — курсор на любой части тела
+-- ============================================================
+local function isCrosshairOnHitbox(m)
+    local center = Vector2.new(Camera.ViewportSize.X*0.5, Camera.ViewportSize.Y*0.5)
+    local radius = cfgT.HitboxRadius
+    for _, part in ipairs(m:GetDescendants()) do
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            local sp = H.w2s(part.Position)
+            if sp then
+                local r = radius
+                if part.Name == "Head" then r = radius * 0.7 end
+                if part.Name == "UpperTorso" or part.Name == "Torso" then r = radius * 1.1 end
+                if (sp - center).Magnitude < r then return true end
+            end
+        end
+    end
+    return false
+end
+
+-- ============================================================
+-- MODE 3: PIXEL — радиус от центра экрана до головы
+-- ============================================================
+local function isPixelHit(m)
+    local partName = cfgT.PreferHead and "Head" or H.resolvePart(m, "auto")
+    local part = m:FindFirstChild(partName, true)
+    if not part then return false end
+    local sc = H.w2s(part.Position)
+    if not sc then return false end
+    local center = Vector2.new(Camera.ViewportSize.X*0.5, Camera.ViewportSize.Y*0.5)
+    return (sc - center).Magnitude < cfgT.PixelRadius
+end
+
+-- ============================================================
+-- MODE 4: UNIVERSAL — стреляет по всему что отрисовано ESP
+-- сканирует все BasePart-хитбоксы цели, проверяет попадает ли курсор
+-- в любой из них в 2D-проекции, приоритет по ближайшему к центру
+-- ============================================================
+local function universalScore(m)
+    local center = Vector2.new(Camera.ViewportSize.X*0.5, Camera.ViewportSize.Y*0.5)
+    local best = nil
+    local bestDist = math.huge
+    for _, part in ipairs(m:GetDescendants()) do
+        if part:IsA("BasePart") then
+            -- исключаем декорации / аксессуары
+            local name = part.Name
+            if name ~= "HumanoidRootPart" and not name:find("Accessory") and not name:find("Handle") then
+                local sc, onScreen = H.w2s(part.Position)
+                if sc and onScreen then
+                    local d = (sc - center).Magnitude
+                    if d < bestDist then
+                        bestDist = d
+                        best = part
+                    end
+                end
+            end
+        end
+    end
+    return bestDist, best
+end
+
+local function isUniversalHit(m)
+    local d, part = universalScore(m)
+    if not part then return false end
+    return d <= cfgT.UniversalFov, part
+end
+
+-- ============================================================
+-- GET BEST TARGET
+-- ============================================================
+local function getBestTriggerTarget()
+    local camPos = Camera.CFrame.Position
+    local center = Vector2.new(Camera.ViewportSize.X*0.5, Camera.ViewportSize.Y*0.5)
+    local best, bestScore = nil, math.huge
+
+    -- если есть target lock — сначала проверяем залоченного
+    if lockedTarget and tick() < targetLockUntil then
+        if H.isAlive(lockedTarget) and not triggerIgnore(lockedTarget) then
+            local ok = false
+            if cfgT.Mode == "esp-box" then ok = isCrosshairInEspBox(lockedTarget)
+            elseif cfgT.Mode == "hitbox" then ok = isCrosshairOnHitbox(lockedTarget)
+            elseif cfgT.Mode == "pixel" then ok = isPixelHit(lockedTarget)
+            elseif cfgT.Mode == "universal" then ok = isUniversalHit(lockedTarget) end
+            if ok then return lockedTarget end
+        end
+        lockedTarget = nil
+    end
+
+    for _, m in ipairs(H.getTargets()) do
+        if H.isAlive(m) and not triggerIgnore(m) and dyingCheck(m) then
+            local root = H.getRoot(m)
+            local hum = H.getHumanoid(m)
+            if root and hum then
+                local d = (camPos - root.Position).Magnitude
+                if d >= cfgT.MinDist and d <= cfgT.MaxDist then
+                    local hp = hum.Health
+                    if hp >= cfgT.HpMin and hp <= cfgT.HpMax then
+                        -- wallcheck
+                        local wallOk = true
+                        if cfgT.WallCheck then
+                            local part = cfgT.PreferHead and "Head" or H.resolvePart(m, "auto")
+                            wallOk = H.isVisible(m, part)
+                        end
+                        if wallOk then
+                            local inAim = false
+                            local score = math.huge
+
+                            if cfgT.Mode == "esp-box" then
+                                inAim = isCrosshairInEspBox(m)
+                                if inAim then score = 1 end
+                            elseif cfgT.Mode == "hitbox" then
+                                inAim = isCrosshairOnHitbox(m)
+                                if inAim then score = 1 end
+                            elseif cfgT.Mode == "pixel" then
+                                local partName = cfgT.PreferHead and "Head" or H.resolvePart(m, "auto")
+                                local part = m:FindFirstChild(partName, true)
+                                if part then
+                                    local sc = H.w2s(part.Position)
+                                    if sc then
+                                        local pxD = (sc - center).Magnitude
+                                        if pxD < cfgT.PixelRadius then
+                                            inAim = true
+                                            score = pxD
+                                        end
+                                    end
+                                end
+                            elseif cfgT.Mode == "universal" then
+                                local d2, _ = universalScore(m)
+                                if d2 <= cfgT.UniversalFov then
+                                    inAim = true
+                                    score = d2
+                                end
+                            end
+
+                            if inAim and score < bestScore then
+                                best = m
+                                bestScore = score
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if best then
+        lockedTarget = best
+        targetLockUntil = tick() + 0.25
+    end
+    return best
+end
+
+-- ============================================================
+-- RATE LIMIT
+-- ============================================================
+local function rateLimitOk()
+    if cfgT.RatePerSec <= 0 then return true end
+    local now = tick()
+    local cutoff = now - 1
+    local new = {}
+    for _, t in ipairs(shotTimes) do
+        if t >= cutoff then table.insert(new, t) end
+    end
+    shotTimes = new
+    return #shotTimes < cfgT.RatePerSec
+end
+
+-- ============================================================
+-- MAIN UPDATE
+-- ============================================================
+local function updateTrigger()
+    if not cfgT.Enabled then return end
+    if not cfgT.AlwaysOn and not trigHeld then return end
+    if not H.isAlive(LocalPlayer.Character) then return end
+
+    local now = tick()
+    if (now - lastKillTime)*1000 < cfgT.AfterKillMs then return end
+
+    -- задержка между выстрелами
+    local delay = cfgT.AutoDelay and lastAutoDelay or cfgT.Delay
+    if cfgT.RandomizeDelay > 0 then
+        local jitter = delay * cfgT.RandomizeDelay
+        delay = delay + (math.random() * 2 - 1) * jitter
+    end
+    if now - lastShot < delay then return end
+    if not rateLimitOk() then return end
+
+    local tool = getCurrentTool()
+    if not toolReady(tool) then return end
+
+    local target = getBestTriggerTarget()
+    if not target then return end
+
+    -- auto delay от характеристик оружия
+    if cfgT.AutoDelay and tool then
+        local rate = tool:GetAttribute("FireRate") or tool:GetAttribute("RPM")
+        if type(rate) == "number" and rate > 0 then
+            lastAutoDelay = math.max(0.03, 60 / rate * 1.05)
+        else
+            lastAutoDelay = cfgT.Delay
+        end
+    end
+
+    -- prefire
+    if cfgT.PrefireMs > 0 then
+        task.wait(cfgT.PrefireMs / 1000)
+        if not cfgT.Enabled then return end
+    end
+
+    fireWeapon()
+    lastShot = now
+    table.insert(shotTimes, now)
+
+    -- burst
+    if cfgT.Burst > 1 then
+        task.spawn(function()
+            for i = 2, cfgT.Burst do
+                task.wait(cfgT.BurstGapMs / 1000)
+                if cfgT.Enabled and (cfgT.AlwaysOn or trigHeld) then
+                    fireWeapon()
+                end
+            end
+        end)
+    end
+end
+
+-- ============================================================
+-- KEYBIND
+-- ============================================================
+UIS.InputBegan:Connect(function(i, gpe)
+    if gpe then return end
+    if i.UserInputType == cfgT.Key or i.KeyCode == cfgT.Key then
+        trigHeld = true
+    end
+end)
+UIS.InputEnded:Connect(function(i)
+    if i.UserInputType == cfgT.Key or i.KeyCode == cfgT.Key then
+        trigHeld = false
+    end
+end)
+
+-- ============================================================
+-- KILL DETECT — для AfterKillMs
+-- ============================================================
+task.spawn(function()
+    while task.wait(0.2) do
+        if not cfgT.Enabled then continue end
+        local hum = H.getHumanoid(LocalPlayer.Character)
+        if hum then
+            local tag = hum:GetAttribute("zeusx_last_kill")
+            if tag and tag ~= lastKillTime then
+                lastKillTime = tag
+            end
+        end
+    end
+end)
+
+-- ============================================================
+-- EXPORT
+-- ============================================================
+getgenv().zeusx_updateTrigger = updateTrigger
+getgenv().zeusx_log("trigger", "module loaded · modes: esp-box / hitbox / pixel / universal")-- ============================================================
 -- Zeus-X Lite v1.1 · ЧАСТЬ 8/9 (A) — MENU CORE
 -- базовые элементы UI: window, tabs, toggle, slider, dropdown
 -- ============================================================
@@ -1665,7 +2091,146 @@ getgenv().zeusx_build_tabs = function()
             function(v) Config.ESP.TracerStyle=v end)
     end
 
-    -- ============================================================
+    --
+
+-- ============================================================
+-- ДОБАВИТЬ В zeusx_build_tabs() — новый таб "trigger"
+-- вставить после tEsp и перед tTeam
+-- ============================================================
+
+local tTrig = makeTab("trigger")
+tTrig.build = function()
+    local cfgT = Config.Trigger
+
+    section("TRIGGERBOT")
+    toggle("triggerbot enable", function() return cfgT.Enabled end, function(v) cfgT.Enabled=v end)
+    toggle("always on (без удержания)", function() return cfgT.AlwaysOn end, function(v) cfgT.AlwaysOn=v end)
+    toggle("strict team", function() return cfgT.StrictTeam end, function(v) cfgT.StrictTeam=v end)
+    toggle("friend check", function() return cfgT.FriendCheck end, function(v) cfgT.FriendCheck=v end)
+    toggle("wall check (visible)", function() return cfgT.WallCheck end, function(v) cfgT.WallCheck=v end)
+    toggle("visible only (жёсткая проверка)", function() return cfgT.VisibleOnly end, function(v) cfgT.VisibleOnly=v end)
+    toggle("ignore dying", function() return cfgT.IgnoreDying end, function(v) cfgT.IgnoreDying=v end)
+
+    section("MODE")
+    dropdown("trigger mode",
+        {"esp-box","hitbox","pixel","universal"},
+        function() return cfgT.Mode end,
+        function(v) cfgT.Mode=v end)
+    dropdown("fire mode",
+        {"both","mouse1click","remoteevent"},
+        function() return cfgT.FireMode end,
+        function(v) cfgT.FireMode=v end)
+
+    section("DELAY")
+    toggle("auto delay (по RPM оружия)", function() return cfgT.AutoDelay end, function(v) cfgT.AutoDelay=v end)
+    slider("manual delay ms", 10, 300,
+        function() return math.floor(cfgT.Delay*1000) end,
+        function(v) cfgT.Delay=v/1000 end)
+    slider("randomize delay %", 0, 100,
+        function() return math.floor(cfgT.RandomizeDelay*100) end,
+        function(v) cfgT.RandomizeDelay=v/100 end)
+    slider("prefire ms", 0, 500,
+        function() return cfgT.PrefireMs end,
+        function(v) cfgT.PrefireMs=v end)
+    slider("after-kill delay ms", 0, 2000,
+        function() return cfgT.AfterKillMs end,
+        function(v) cfgT.AfterKillMs=v end)
+
+    section("BURST")
+    slider("burst count", 1, 20,
+        function() return cfgT.Burst end,
+        function(v) cfgT.Burst=v end)
+    slider("burst gap ms", 20, 500,
+        function() return cfgT.BurstGapMs end,
+        function(v) cfgT.BurstGapMs=v end)
+
+    section("RATE LIMIT")
+    slider("max shots / sec (0 = off)", 0, 40,
+        function() return cfgT.RatePerSec end,
+        function(v) cfgT.RatePerSec=v end)
+
+    section("DISTANCE")
+    slider("min distance", 0, 200,
+        function() return cfgT.MinDist end,
+        function(v) cfgT.MinDist=v end)
+    slider("max distance", 100, 5000,
+        function() return cfgT.MaxDist end,
+        function(v) cfgT.MaxDist=v end)
+
+    section("HP FILTER")
+    slider("hp min", 0, 500,
+        function() return cfgT.HpMin end,
+        function(v) cfgT.HpMin=v end)
+    slider("hp max", 0, 100000,
+        function() return cfgT.HpMax end,
+        function(v) cfgT.HpMax=v end)
+    slider("dying hp %", 0, 100,
+        function() return cfgT.DyingHpPct end,
+        function(v) cfgT.DyingHpPct=v end)
+
+    section("HITBOX / PIXEL")
+    slider("pixel radius", 10, 150,
+        function() return cfgT.PixelRadius end,
+        function(v) cfgT.PixelRadius=v end)
+    slider("hitbox radius", 10, 150,
+        function() return cfgT.HitboxRadius end,
+        function(v) cfgT.HitboxRadius=v end)
+    slider("universal fov", 50, 500,
+        function() return cfgT.UniversalFov end,
+        function(v) cfgT.UniversalFov=v end)
+    toggle("head only", function() return cfgT.HeadOnly end, function(v) cfgT.HeadOnly=v end)
+    toggle("prefer head", function() return cfgT.PreferHead end, function(v) cfgT.PreferHead=v end)
+
+    section("WEAPON FILTER")
+    toggle("whitelist mode", function() return cfgT.WhitelistMode end, function(v) cfgT.WhitelistMode=v end)
+    toggle("require tool", function() return cfgT.RequireTool end, function(v) cfgT.RequireTool=v end)
+
+    inputBox("add weapon to whitelist", function() return "" end, function(v)
+        if v and v ~= "" then table.insert(cfgT.WeaponWhitelist, v) end
+    end, "имя оружия + Enter")
+
+    inputBox("add weapon to blacklist", function() return "" end, function(v)
+        if v and v ~= "" then table.insert(cfgT.WeaponBlacklist, v) end
+    end, "имя оружия + Enter")
+
+    -- кнопка: добавить оружие в руках
+    button("добавить оружие в руках → whitelist", function()
+        local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+        if tool then
+            table.insert(cfgT.WeaponWhitelist, tool.Name)
+            print("[zeusx] wl+: " .. tool.Name)
+        else
+            print("[zeusx] нет оружия в руках")
+        end
+    end)
+    button("добавить оружие в руках → blacklist", function()
+        local tool = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Tool")
+        if tool then
+            table.insert(cfgT.WeaponBlacklist, tool.Name)
+            print("[zeusx] bl+: " .. tool.Name)
+        else
+            print("[zeusx] нет оружия в руках")
+        end
+    end)
+    button("show whitelist", function()
+        local s = #cfgT.WeaponWhitelist == 0 and "(пусто)" or table.concat(cfgT.WeaponWhitelist, ", ")
+        print("[zeusx] weapon wl:", s)
+    end)
+    button("show blacklist", function()
+        local s = #cfgT.WeaponBlacklist == 0 and "(пусто)" or table.concat(cfgT.WeaponBlacklist, ", ")
+        print("[zeusx] weapon bl:", s)
+    end)
+    button("clear weapon whitelist", function() cfgT.WeaponWhitelist = {} end)
+    button("clear weapon blacklist", function() cfgT.WeaponBlacklist = {} end)
+
+    section("INFO")
+    button("что значит universal", function()
+        print("[zeusx] universal mode — стреляет по любой BasePart цели,")
+        print("[zeusx] которая попадает в радиус UniversalFov от центра экрана.")
+        print("[zeusx] покрывает ESP-box + skeleton + chams + arrows одновременно.")
+    end)
+end
+ ============================================================
     -- TAB: TEAM
     -- ============================================================
     local tTeam = makeTab("team")
