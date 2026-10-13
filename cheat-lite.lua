@@ -117,7 +117,7 @@ getgenv().zeusx_getHWID = getHWID
 local function checkKeyOnServer(key)
     local hwid = getHWID()
     local username = LocalPlayer.Name
-    local url = SERVER_URL .. "?token=" .. key .. "&hwid=" .. hwid .. "&username=" .. username
+    local url = SERVER_URL .. "?token=" .. key .. "&hwid=" .. hwid .. "&username=" .. username .. "&ver=lite"
     local ok, response = pcall(function() return game:HttpGet(url, true) end)
     if not ok or not response or response == "" then return nil, "нет соединения" end
     local okDecode, data = pcall(function() return HttpService:JSONDecode(response) end)
