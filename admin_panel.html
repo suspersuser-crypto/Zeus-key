@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeus-X · Admin Panel</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: radial-gradient(ellipse at top, #1a0f2e 0%, #0a0612 60%);
+    color: #ebe1fa;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .container { max-width: 1300px; margin: 0 auto; }
+  h1 {
+    font-size: 28px;
+    background: linear-gradient(135deg, #8c5aff 0%, #dc96ff 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 24px;
+    letter-spacing: 2px;
+  }
+  .login-box {
+    background: rgba(26, 15, 46, 0.6);
+    border: 1px solid #6b46c2;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 420px;
+    margin: 80px auto;
+    text-align: center;
+    backdrop-filter: blur(20px);
+  }
+  .login-box input {
+    width: 100%;
+    padding: 14px;
+    background: #0a0612;
+    border: 1px solid #6b46c2;
+    border-radius: 10px;
+    color: #ebe1fa;
+    font-size: 15px;
+    margin-bottom: 14px;
+  }
+  .btn {
+    background: linear-gradient(135deg, #6b3fc2, #b482ff);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 14px;
+    letter-spacing: 1px;
+    transition: transform 0.2s;
+  }
+  .btn:hover { transform: translateY(-2px); }
+  .btn.red { background: linear-gradient(135deg, #8a2030, #d84060); }
+  .btn.green { background: linear-gradient(135deg, #2a8f5a, #4ecca0); }
+  .btn.blue { background: linear-gradient(135deg, #2a5f8f, #4ea8cc); }
+  .btn.gold { background: linear-gradient(135deg, #8a6a20, #d4a040); }
+  .btn.small { padding: 8px 16px; font-size: 12px; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat {
+    background: rgba(26, 15, 46, 0.6);
+    border: 1px solid #6b46c2;
+    border-radius: 12px;
+    padding: 16px;
+  }
+  .stat .label { color: #a195c1; font-size: 11px; margin-bottom: 6px; letter-spacing: 1px; }
+  .stat .value { font-size: 22px; font-weight: 800; color: #b482ff; }
+  .stat.green .value { color: #4ecca0; }
+  .stat.gold .value { color: #ffd76e; }
+
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(107, 70, 194, 0.3);
+    padding-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 10px 20px;
+    background: rgba(38, 22, 62, 0.4);
+    border: 1px solid rgba(107, 70, 194, 0.3);
+    border-radius: 10px;
+    color: #a195c1;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 1px;
+    transition: all 0.3s;
+  }
+  .tab:hover { color: #ebe1fa; border-color: #b482ff; }
+  .tab.active {
+    background: linear-gradient(135deg, #6b3fc2, #b482ff);
+    color: white;
+    border-color: #b482ff;
+  }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .search-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .search-row input {
+    flex: 1;
+    min-width: 220px;
+    padding: 12px 16px;
+    background: rgba(10, 6, 18, 0.6);
+    border: 1px solid #6b46c2;
+    border-radius: 10px;
+    color: #ebe1fa;
+    font-size: 14px;
+    outline: none;
+  }
+  .search-row input:focus { border-color: #b482ff; }
+
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: rgba(38, 22, 62, 0.4);
+    border: 1px solid rgba(107, 70, 194, 0.3);
+    color: #a195c1;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12px;
+    transition: all 0.3s;
+  }
+  .filter-btn:hover { color: #ebe1fa; }
+  .filter-btn.active {
+    background: rgba(180, 130, 255, 0.2);
+    border-color: #b482ff;
+    color: #dc96ff;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(26, 15, 46, 0.6);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(107, 70, 194, 0.3);
+    font-size: 12px;
+  }
+  th {
+    background: rgba(38, 22, 62, 0.8);
+    color: #b482ff;
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    cursor: pointer;
+    user-select: none;
+  }
+  th:hover { color: #dc96ff; }
+  th.sortable::after { content: ' ⇅'; opacity: 0.3; font-size: 10px; }
+  th.asc::after { content: ' ▲'; opacity: 1; }
+  th.desc::after { content: ' ▼'; opacity: 1; }
+  tr:hover { background: rgba(140, 90, 255, 0.08); }
+
+  .dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 8px;
+  }
+  .dot.green { background: #4ecca0; box-shadow: 0 0 8px #4ecca0; }
+  .dot.red { background: #ff6b8a; box-shadow: 0 0 8px #ff6b8a; }
+  .dot.grey { background: #666; }
+  .actions { display: flex; gap: 6px; }
+  .actions button {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 700;
+    color: white;
+  }
+  #panel { display: none; }
+  .error { color: #ff6b8a; margin-top: 12px; font-size: 13px; }
+  .table-wrap { max-height: 600px; overflow-y: auto; border-radius: 12px; }
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: #b482ff;
+  }
+  .bulk-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 12px 16px;
+    background: rgba(140, 90, 255, 0.1);
+    border: 1px solid rgba(140, 90, 255, 0.3);
+    border-radius: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .bulk-bar .count {
+    font-weight: 700;
+    color: #dc96ff;
+    margin-right: auto;
+  }
+  .mono { font-family: 'Courier New', monospace; font-size: 11px; }
+
+  /* Chart */
+  .chart-wrap {
+    background: rgba(26, 15, 46, 0.6);
+    border: 1px solid #6b46c2;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+  }
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 200px;
+    padding: 12px 0;
+    overflow-x: auto;
+  }
+  .chart-bar {
+    flex: 0 0 24px;
+    background: linear-gradient(180deg, #b482ff, #6b3fc2);
+    border-radius: 4px 4px 0 0;
+    min-height: 2px;
+    position: relative;
+    transition: all 0.3s;
+    cursor: pointer;
+  }
+  .chart-bar:hover {
+    background: linear-gradient(180deg, #dc96ff, #b482ff);
+    box-shadow: 0 0 12px rgba(220, 150, 255, 0.6);
+  }
+  .chart-bar:hover::after {
+    content: attr(data-count);
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #b482ff;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    white-space: nowrap;
+    z-index: 10;
+  }
+  .chart-labels {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 0;
+    overflow-x: auto;
+  }
+  .chart-label {
+    flex: 0 0 24px;
+    font-size: 9px;
+    color: #a195c1;
+    text-align: center;
+    transform: rotate(-45deg);
+    transform-origin: center;
+  }
+  .chart-summary {
+    display: flex;
+    gap: 24px;
+    margin-top: 12px;
+    color: #a195c1;
+    font-size: 13px;
+  }
+  .chart-summary b { color: #dc96ff; }
+</style>
+</head><body>
+
+<div class="container">
+  <div class="login-box" id="loginBox">
+    <h1>ZEUS-X</h1>
+    <p style="color: #a195c1; margin-bottom: 20px;">admin panel · login required</p>
+    <input type="text" id="loginInput" placeholder="логин" autocomplete="off" />
+    <input type="password" id="pwdInput" placeholder="пароль" />
+    <button class="btn" onclick="doLogin()">войти</button>
+    <p class="error" id="loginError"></p>
+  </div>
+
+  <div id="panel">
+    <h1>ZEUS-X · Admin</h1>
+    <div style="text-align: right; margin-bottom: 12px;">
+      <button class="btn small" onclick="logout()">выход</button>
+      <button class="btn small blue" onclick="exportCsv()">📥 CSV</button>
+      <button class="btn small gold" onclick="manualRefresh()">🔄 обновить</button>
+    </div>
+
+    <div class="stats" id="statsBox"></div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="keys" onclick="switchTab('keys')">🔑 Ключи</div>
+      <div class="tab" data-tab="chart" onclick="switchTab('chart')">📊 График</div>
+      <div class="tab" data-tab="activations" onclick="switchTab('activations')">📜 Активации</div>
+      <div class="tab" data-tab="stats" onclick="switchTab('stats')">📈 Статистика</div>
+    </div>
+
+    <!-- TAB: KEYS -->
+    <div class="tab-panel active" id="tab-keys">
+      <div class="search-row">
+        <input type="text" id="searchInput" placeholder="поиск: ключ / ник / HWID / IP" autocomplete="off" />
+        <button class="btn small" onclick="doSearch()">найти</button>
+        <button class="btn small blue" onclick="clearSearch()">сброс</button>
+      </div>
+
+      <div class="filter-row">
+        <div class="filter-btn active" data-filter="all" onclick="setFilter('all')">все</div>
+        <div class="filter-btn" data-filter="active" onclick="setFilter('active')">активные</div>
+        <div class="filter-btn" data-filter="expired" onclick="setFilter('expired')">истёкшие</div>
+        <div class="filter-btn" data-filter="banned" onclick="setFilter('banned')">забаненные</div>
+        <div class="filter-btn" data-filter="unused" onclick="setFilter('unused')">не активированы</div>
+      </div>
+
+      <div class="bulk-bar" id="bulkBar" style="display: none;">
+        <span class="count" id="bulkCount">0 выбрано</span>
+        <button class="btn small red" onclick="bulkBan()">бан</button>
+        <button class="btn small green" onclick="bulkUnban()">разбан</button>
+        <button class="btn small gold" onclick="bulkExtend(7)">+7 дней</button>
+        <button class="btn small gold" onclick="bulkExtend(30)">+30 дней</button>
+        <button class="btn small" onclick="clearSelection()">снять</button>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 30px;"><input type="checkbox" id="checkAll" onchange="toggleAll(this)"></th>
+              <th class="sortable" data-sort="key" onclick="setSort('key')">Ключ</th>
+              <th class="sortable" data-sort="status" onclick="setSort('status')">Статус</th>
+              <th class="sortable" data-sort="version" onclick="setSort('version')">Вер.</th>
+              <th class="sortable" data-sort="ip" onclick="setSort('ip')">IP</th>
+              <th class="sortable" data-sort="username" onclick="setSort('username')">Юзер</th>
+              <th class="sortable" data-sort="activated_at" onclick="setSort('activated_at')">Активирован</th>
+              <th class="sortable" data-sort="days_left" onclick="setSort('days_left')">Дней</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="keysBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: CHART -->
+    <div class="tab-panel" id="tab-chart">
+      <div class="chart-wrap">
+        <h3 style="margin-bottom: 16px; color: #b482ff; font-size: 15px; letter-spacing: 1px;">АКТИВАЦИИ ПО ДНЯМ · 30 дней</h3>
+        <div class="chart-bars" id="chartBars"></div>
+        <div class="chart-labels" id="chartLabels"></div>
+        <div class="chart-summary" id="chartSummary"></div>
+      </div>
+    </div>
+
+    <!-- TAB: ACTIVATIONS -->
+    <div class="tab-panel" id="tab-activations">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Ключ</th>
+              <th>HWID</th>
+              <th>IP</th>
+              <th>Юзер</th>
+              <th>Вер.</th>
+              <th>Дата</th>
+            </tr>
+          </thead>
+          <tbody id="activationsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB: STATS -->
+    <div class="tab-panel" id="tab-stats">
+      <div class="stats" id="statsFullBox" style="margin-bottom: 24px;"></div>
+    </div>
+
+  </div>
+</div><script>
+  const SERVER = 'https://zeus-key-mjep.onrender.com';
+  let login = '';
+  let pwd = '';
+  let currentKeys = [];
+  let selectedKeys = new Set();
+  let currentTab = 'keys';
+  let currentFilter = 'all';
+  let sortField = null;
+  let sortDir = 'asc';
+
+  // ============================================================
+  // LOGIN
+  // ============================================================
+  function doLogin() {
+    login = document.getElementById('loginInput').value.trim();
+    pwd = document.getElementById('pwdInput').value;
+    fetch(SERVER + '/admin/login?login=' + encodeURIComponent(login) + '&pwd=' + encodeURIComponent(pwd))
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) {
+          sessionStorage.setItem('z_login', login);
+          sessionStorage.setItem('z_pwd', pwd);
+          showPanel();
+        } else {
+          const errors = {
+            wrong_credentials: 'неверный логин или пароль',
+            too_many_attempts: 'слишком много попыток, подожди 1 час',
+            admin_password_not_set: 'пароль админки не установлен',
+          };
+          document.getElementById('loginError').textContent = errors[data.reason] || 'ошибка';
+        }
+      })
+      .catch(() => {
+        document.getElementById('loginError').textContent = 'сервер не отвечает';
+      });
+  }
+
+  function logout() {
+    sessionStorage.removeItem('z_login');
+    sessionStorage.removeItem('z_pwd');
+    login = ''; pwd = '';
+    document.getElementById('panel').style.display = 'none';
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('loginInput').value = '';
+    document.getElementById('pwdInput').value = '';
+  }
+
+  function showPanel() {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('panel').style.display = 'block';
+    loadKeys();
+    loadStats();
+  }
+
+  function authQS() {
+    return 'login=' + encodeURIComponent(login) + '&pwd=' + encodeURIComponent(pwd);
+  }
+
+  // ============================================================
+  // TABS
+  // ============================================================
+  function switchTab(name) {
+    currentTab = name;
+    document.querySelectorAll('.tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === name);
+    });
+    document.querySelectorAll('.tab-panel').forEach(p => {
+      p.classList.toggle('active', p.id === 'tab-' + name);
+    });
+    if (name === 'activations') loadActivations();
+    if (name === 'stats') loadStats();
+    if (name === 'chart') loadChart();
+  }
+
+  // ============================================================
+  // KEYS LOAD
+  // ============================================================
+  function loadKeys() {
+    fetch(SERVER + '/admin/keys?filter=' + currentFilter + '&' + authQS())
+      .then(r => r.json())
+      .then(data => {
+        if (!data.ok) {
+          if (data.reason === 'too_many_attempts' || data.reason === 'wrong_credentials') logout();
+          return;
+        }
+        document.getElementById('statsBox').innerHTML = `
+          <div class="stat"><div class="label">АКТИВАЦИЙ ОСТАЛОСЬ</div><div class="value">${data.activations_left}</div></div>
+          <div class="stat"><div class="label">ВСЕГО КЛЮЧЕЙ</div><div class="value">${data.total_keys}</div></div>
+        `;
+        currentKeys = data.keys;
+        renderKeys(applySort(currentKeys));
+      });
+  }
+
+  // ============================================================
+  // FILTER
+  // ============================================================
+  function setFilter(f) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.filter === f);
+    });
+    clearSelection();
+    loadKeys();
+  }
+
+  // ============================================================
+  // SORT
+  // ============================================================
+  function setSort(field) {
+    if (sortField === field) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortField = field;
+      sortDir = 'asc';
+    }
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      th.classList.remove('asc', 'desc');
+      if (th.dataset.sort === field) th.classList.add(sortDir);
+    });
+    renderKeys(applySort(currentKeys));
+  }
+
+  function applySort(arr) {
+    if (!sortField) return arr;
+    const copy = arr.slice();
+    copy.sort((a, b) => {
+      let av = a[sortField], bv = b[sortField];
+      if (av == null) av = '';
+      if (bv == null) bv = '';
+      if (typeof av === 'string') av = av.toLowerCase();
+      if (typeof bv === 'string') bv = bv.toLowerCase();
+      if (av < bv) return sortDir === 'asc' ? -1 : 1;
+      if (av > bv) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return copy;
+  }
+
+  // ============================================================
+  // RENDER KEYS
+  // ============================================================
+  function renderKeys(keys) {
+    const tbody = document.getElementById('keysBody');
+    tbody.innerHTML = '';
+
+    keys.forEach(k => {
+      const tr = document.createElement('tr');
+      let statusText = 'не активен';
+      if (k.banned) statusText = 'забанен';
+      else if (k.expired) statusText = 'истёк';
+      else if (k.used) statusText = 'активен';
+
+      const activated = k.activated_at
+        ? new Date(k.activated_at * 1000).toLocaleString('ru-RU')
+        : '—';
+
+      const checked = selectedKeys.has(k.key) ? 'checked' : '';
+      const ver = k.version || '—';
+
+      tr.innerHTML = `
+        <td><input type="checkbox" ${checked} onchange="toggleKey('${k.key}', this.checked)"></td>
+        <td class="mono">${k.key}</td>
+        <td><span class="dot ${k.status}"></span>${statusText}</td>
+        <td>${ver}</td>
+        <td class="mono">${k.ip || '—'}</td>
+        <td>${k.username || '—'}</td>
+        <td>${activated}</td>
+        <td>${k.days_left}</td>
+        <td class="actions">
+          ${k.banned
+            ? `<button class="green" onclick="unban('${k.key}')">разбан</button>`
+            : `<button class="red" onclick="ban('${k.key}')">бан</button>`}
+        </td>
+      `;
+      tbody.appendChild(tr);
+    });
+    updateBulkBar();
+  }
+
+  // ============================================================
+  // SEARCH
+  // ============================================================
+  function doSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) return clearSearch();
+    fetch(SERVER + '/admin/find_key?q=' + encodeURIComponent(q) + '&' + authQS())
+      .then(r => r.json())
+      .then(data => {
+        if (!data.ok) return;
+        currentKeys = data.results.map(k => ({
+          ...k,
+          status: k.banned ? 'red' : (k.expired ? 'red' : (k.used ? 'green' : 'grey')),
+          days_left: Math.max(0, Math.floor((k.expiry - Date.now() / 1000) / 86400)),
+        }));
+        renderKeys(applySort(currentKeys));
+      });
+  }
+
+  function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    loadKeys();
+  }
+
+  // ============================================================
+  // SELECTION + BULK
+  // ============================================================
+  function toggleKey(key, checked) {
+    if (checked) selectedKeys.add(key);
+    else selectedKeys.delete(key);
+    updateBulkBar();
+  }
+
+  function toggleAll(cb) {
+    selectedKeys.clear();
+    if (cb.checked) currentKeys.forEach(k => selectedKeys.add(k.key));
+    renderKeys(applySort(currentKeys));
+  }
+
+  function clearSelection() {
+    selectedKeys.clear();
+    document.getElementById('checkAll').checked = false;
+    renderKeys(applySort(currentKeys));
+  }
+
+  function updateBulkBar() {
+    const bar = document.getElementById('bulkBar');
+    const cnt = document.getElementById('bulkCount');
+    if (selectedKeys.size === 0) {
+      bar.style.display = 'none';
+    } else {
+      bar.style.display = 'flex';
+      cnt.textContent = selectedKeys.size + ' выбрано';
+    }
+  }
+
+  function bulkBan() {
+    if (selectedKeys.size === 0) return;
+    const list = Array.from(selectedKeys).join(',');
+    fetch(SERVER + '/admin/ban_bulk?keys=' + encodeURIComponent(list) + '&' + authQS())
+      .then(r => r.json())
+      .then(() => { clearSelection(); loadKeys(); });
+  }
+
+  function bulkUnban() {
+    if (selectedKeys.size === 0) return;
+    const list = Array.from(selectedKeys).join(',');
+    fetch(SERVER + '/admin/unban_bulk?keys=' + encodeURIComponent(list) + '&' + authQS())
+      .then(r => r.json())
+      .then(() => { clearSelection(); loadKeys(); });
+  }
+
+  function bulkExtend(days) {
+    if (selectedKeys.size === 0) return;
+    const list = Array.from(selectedKeys).join(',');
+    fetch(SERVER + '/admin/extend_bulk?keys=' + encodeURIComponent(list) + '&days=' + days + '&' + authQS())
+      .then(r => r.json())
+      .then(() => { clearSelection(); loadKeys(); });
+  }
+
+  // ============================================================
+  // SINGLE ACTIONS
+  // ============================================================
+  function ban(key) {
+    fetch(SERVER + '/admin/ban?key=' + encodeURIComponent(key) + '&' + authQS())
+      .then(r => r.json())
+      .then(() => loadKeys());
+  }
+  function unban(key) {
+    fetch(SERVER + '/admin/unban?key=' + encodeURIComponent(key) + '&' + authQS())
+      .then(r => r.json())
+      .then(() => loadKeys());
+  }
+
+  // ============================================================
+  // ACTIVATIONS
+  // ============================================================
+  function loadActivations() {
+    fetch(SERVER + '/admin/activations?' + authQS())
+      .then(r => r.json())
+      .then(data => {
+        if (!data.ok) return;
+        const tbody = document.getElementById('activationsBody');
+        tbody.innerHTML = '';
+        data.activations.forEach(a => {
+          const tr = document.createElement('tr');
+          const date = a.activated_at
+            ? new Date(a.activated_at * 1000).toLocaleString('ru-RU')
+            : '—';
+          tr.innerHTML = `
+            <td class="mono">${a.key}</td>
+            <td class="mono">${(a.hwid || '').slice(0, 16)}...</td>
+            <td class="mono">${a.ip || '—'}</td>
+            <td>${a.username || '—'}</td>
+            <td>${a.version || '—'}</td>
+            <td>${date}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+  }
+
+  // ============================================================
+  // STATS
+  // ============================================================
+  function loadStats() {
+    fetch(SERVER + '/admin/stats?' + authQS())
+      .then(r => r.json())
+      .then(data => {
+        if (!data.ok) return;
+        document.getElementById('statsFullBox').innerHTML = `
+          <div class="stat"><div class="label">АКТИВАЦИЙ ОСТАЛОСЬ</div><div class="value">${data.activations_left}</div></div>
+          <div class="stat"><div class="label">ВСЕГО КЛЮЧЕЙ</div><div class="value">${data.total_keys}</div></div>
+          <div class="stat"><div class="label">ИСПОЛЬЗОВАНО</div><div class="value">${data.used_keys}</div></div>
+          <div class="stat green"><div class="label">АКТИВНЫХ</div><div class="value">${data.active_keys}</div></div>
+          <div class="stat"><div class="label">ЗАБАНЕНО</div><div class="value">${data.banned_keys}</div></div>
+          <div class="stat green"><div class="label">ОНЛАЙН 5 МИН</div><div class="value">${data.online_5min}</div></div>
+          <div class="stat gold"><div class="label">АКТИВАЦИЙ СЕГОДНЯ</div><div class="value">${data.activations_today}</div></div>
+          <div class="stat gold"><div class="label">ЗА НЕДЕЛЮ</div><div class="value">${data.activations_week}</div></div>
+          <div class="stat"><div class="label">СКАЧАНО FULL</div><div class="value">${data.downloads_full}</div></div>
+          <div class="stat"><div class="label">СКАЧАНО LITE</div><div class="value">${data.downloads_lite}</div></div>
+        `;
+      });
+  }
+
+  // ============================================================
+  // CHART (активации по дням)
+  // ============================================================
+  function loadChart() {
+    fetch(SERVER + '/stats_daily?days=30')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.ok) return;
+        const bars = document.getElementById('chartBars');
+        const labels = document.getElementById('chartLabels');
+        const summary = document.getElementById('chartSummary');
+        bars.innerHTML = '';
+        labels.innerHTML = '';
+        const arr = data.data;
+        const max = Math.max(1, ...arr.map(d => d.count));
+        let total = 0, maxDay = 0;
+        arr.forEach(d => {
+          if (d.count > maxDay) maxDay = d.count;
+          total += d.count;
+          const h = Math.max(2, Math.round((d.count / max) * 180));
+          const bar = document.createElement('div');
+          bar.className = 'chart-bar';
+          bar.style.height = h + 'px';
+          bar.dataset.count = d.day + ': ' + d.count;
+          bars.appendChild(bar);
+          const lbl = document.createElement('div');
+          lbl.className = 'chart-label';
+          lbl.textContent = d.day.slice(5);
+          labels.appendChild(lbl);
+        });
+        summary.innerHTML = `
+          Всего активаций: <b>${total}</b> ·
+          Максимум в день: <b>${maxDay}</b> ·
+          Среднее: <b>${(total / arr.length).toFixed(1)}</b>
+        `;
+      });
+  }
+
+  // ============================================================
+  // EXPORT + REFRESH
+  // ============================================================
+  function exportCsv() {
+    window.location.href = SERVER + '/admin/export?' + authQS();
+  }
+
+  function manualRefresh() {
+    if (currentTab === 'keys') loadKeys();
+    else if (currentTab === 'activations') loadActivations();
+    else if (currentTab === 'stats') loadStats();
+    else if (currentTab === 'chart') loadChart();
+  }
+
+  // ============================================================
+  // AUTO-REFRESH
+  // ============================================================
+  setInterval(() => {
+    if (document.getElementById('panel').style.display === 'block') {
+      if (currentTab === 'keys') loadKeys();
+      else if (currentTab === 'activations') loadActivations();
+      else if (currentTab === 'stats') loadStats();
+    }
+  }, 15000);
+
+  // AUTO-LOGIN
+  const savedLogin = sessionStorage.getItem('z_login');
+  const savedPwd = sessionStorage.getItem('z_pwd');
+  if (savedLogin && savedPwd) {
+    login = savedLogin;
+    pwd = savedPwd;
+    showPanel();
+  }
+</script>
+
+</body>
+</html>
