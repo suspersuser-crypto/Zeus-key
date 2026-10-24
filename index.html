@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeus-X · Premium Access</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #050505; --surface: rgba(255, 255, 255, 0.03); --border: rgba(255, 255, 255, 0.08);
+    --text: #ffffff; --muted: #888899; --red: #ff2a2a; --red-glow: rgba(255, 42, 42, 0.4); --green: #00e676;
+  }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; justify-content: center; padding: 40px 20px; overflow-x: hidden; }
+  .bg-grid { position: fixed; inset: 0; z-index: -2; background-image: linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px); background-size: 40px 40px; mask-image: radial-gradient(circle at center, black 10%, transparent 70%); }
+  .orb { position: fixed; border-radius: 50%; filter: blur(100px); z-index: -1; pointer-events: none; opacity: 0.2; animation: float 12s infinite alternate; }
+  .orb-red { width: 600px; height: 600px; background: var(--red); top: -100px; left: -100px; }
+  .orb-purple { width: 500px; height: 500px; background: #6b3fc2; bottom: -100px; right: -100px; animation-delay: -5s; }
+  @keyframes float { 0% { transform: translate(0,0) scale(1); } 100% { transform: translate(50px, 50px) scale(1.1); } }
+  .container { width: 100%; max-width: 900px; z-index: 1; position: relative; }
+  header { text-align: center; margin-bottom: 40px; position: relative; animation: fadeInDown 1s; }
+  .logo { font-size: 56px; font-weight: 900; letter-spacing: -2px; line-height: 1; margin-bottom: 12px; }
+  .logo span { color: var(--red); text-shadow: 0 0 40px var(--red-glow); }
+  .subtitle { color: var(--muted); font-size: 13px; letter-spacing: 5px; text-transform: uppercase; font-weight: 600; }
+  
+  .user-btn { position: absolute; right: 0; top: 10px; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 10px 16px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 12px; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+  .user-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); }
+  @keyframes fadeInDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+
+  .glass { background: var(--surface); backdrop-filter: blur(24px); border: 1px solid var(--border); border-radius: 24px; padding: 32px; margin-bottom: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.6); animation: fadeInUp 1s backwards; }
+  .glass:nth-child(2) { animation-delay: 0.1s; }
+  .glass:nth-child(3) { animation-delay: 0.2s; }
+  .glass:nth-child(4) { animation-delay: 0.3s; }
+  @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+  .title { font-size: 18px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+  .title::before { content: ''; width: 4px; height: 18px; background: var(--red); border-radius: 4px; box-shadow: 0 0 12px var(--red); }
+</style><style>
+  .dl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 600px) { .dl-grid { grid-template-columns: 1fr; } }
+  .ver-box { background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 20px; padding: 24px; position: relative; }
+  .ver-name { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .ver-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; min-height: 40px; }
+  .btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 16px; border-radius: 14px; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; transition: all 0.3s; border: 1px solid transparent; text-decoration: none; }
+  .btn-lite { background: rgba(51, 136, 255, 0.1); color: #66aaff; border-color: rgba(51, 136, 255, 0.3); }
+  .btn-red { background: rgba(255, 42, 42, 0.1); color: #ff5555; border-color: rgba(255, 42, 42, 0.3); }
+  
+  .lock-overlay { position: absolute; inset: 0; z-index: 10; background: rgba(5, 5, 5, 0.85); backdrop-filter: blur(8px); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 24px; transition: opacity 0.5s ease; }
+  .lock-overlay.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+  .lock-text { font-size: 14px; font-weight: 600; color: var(--red); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1px; }
+  .key-form { display: flex; gap: 10px; width: 100%; max-width: 450px; }
+  .key-form input { flex: 1; padding: 14px 16px; background: rgba(0,0,0,0.5); border: 1px solid var(--border); border-radius: 12px; color: white; font-family: monospace; font-size: 14px; outline: none; }
+  .key-form button { padding: 0 24px; background: white; color: black; font-weight: 800; font-size: 13px; border: none; border-radius: 12px; cursor: pointer; }
+  .key-msg { margin-top: 12px; font-size: 13px; font-weight: 600; min-height: 20px; }
+
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: 0.3s; }
+  .modal-overlay.active { opacity: 1; visibility: visible; }
+  .modal { background: #0a0a0c; border: 1px solid var(--border); border-radius: 24px; padding: 32px; width: 100%; max-width: 400px; box-shadow: 0 20px 60px rgba(0,0,0,0.8); transform: translateY(20px); transition: 0.3s; position: relative; }
+  .modal-overlay.active .modal { transform: translateY(0); }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: var(--muted); font-size: 24px; cursor: pointer; }
+  .user-info-row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+  .user-info-row span:first-child { color: var(--muted); }
+  .user-info-row span:last-child { font-weight: 600; font-family: monospace; }
+  .btn-reset { width: 100%; margin-top: 24px; padding: 14px; background: rgba(255,42,42,0.1); color: var(--red); border: 1px solid rgba(255,42,42,0.3); border-radius: 12px; font-weight: 800; cursor: pointer; transition: 0.3s; }
+  .btn-reset:hover { background: rgba(255,42,42,0.2); }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  @media (max-width: 600px) { .stats { grid-template-columns: 1fr 1fr; } }
+  .stat-box { text-align: center; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 16px; }
+  .stat-val { font-size: 28px; font-weight: 900; margin-bottom: 4px; }
+  .stat-val.green { color: var(--green); }
+  .stat-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+  .links { display: flex; justify-content: center; gap: 12px; }
+  .links a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; width: 90px; height: 90px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 18px; color: var(--muted); text-decoration: none; font-size: 11px; font-weight: 700; transition: 0.3s; }
+  .links a:hover { background: rgba(255,255,255,0.06); color: white; transform: translateY(-4px); }
+  .links a svg { width: 24px; height: 24px; fill: currentColor; }
+  footer { text-align: center; color: var(--muted); font-size: 12px; padding: 40px 0; }
+</style>
+</head><body>
+<div class="bg-grid"></div>
+<div class="orb orb-red"></div>
+<div class="orb orb-purple"></div>
+
+<div class="container">
+  <header>
+    <button class="user-btn" id="btnOpenUser">👤 Личный кабинет</button>
+    <div class="logo">ZEUS<span>-X</span></div>
+    <div class="subtitle">Premium Roblox Software</div>
+  </header>
+
+  <div class="glass" style="position: relative; min-height: 250px;">
+    <div class="lock-overlay" id="lockOverlay">
+      <div class="lock-text">Доступ заблокирован</div>
+      <div class="key-form">
+        <input type="text" id="keyInput" placeholder="VANTA-XXXX-XXXX-XXXX" autocomplete="off">
+        <button id="btnCheck">Войти</button>
+      </div>
+      <div class="key-msg" id="keyMsg"></div>
+    </div>
+
+    <div class="title">Выбери версию</div>
+    <div class="dl-grid">
+      <div class="ver-box">
+        <div class="ver-name" style="color: #66aaff;">LITE v3.4</div>
+        <div class="ver-desc">Максимальная стабильность. 14 модулей. Идеально для мобильных устройств и слабых ПК.</div>
+        <button class="btn btn-lite" id="btnLite">Скопировать Loader</button>
+      </div>
+      <div class="ver-box">
+        <div class="ver-name" style="color: #ff5555;">AGGRESSIVE v1.0</div>
+        <div class="ver-desc">Максимальная мощь. 10 модулей. Жёсткий Aimbot, Silent Aim и Trigger без задержек.</div>
+        <button class="btn btn-red" id="btnAggro">Скопировать Loader</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass">
+    <div class="title">Live Статистика</div>
+    <div class="stats">
+      <div class="stat-box"><div class="stat-val green" id="stOnline">0</div><div class="stat-lbl">Онлайн</div></div>
+      <div class="stat-box"><div class="stat-val" id="stKeys">0</div><div class="stat-lbl">Ключей</div></div>
+      <div class="stat-box"><div class="stat-val" id="stUptime">—</div><div class="stat-lbl">Аптайм</div></div>
+      <div class="stat-box"><div class="stat-val" id="stActs">0</div><div class="stat-lbl">Активаций</div></div>
+    </div>
+  </div>  <div class="glass">
+    <div class="title">Ссылки</div>
+    <div class="links">
+      <a href="https://t.me/noir_xis" target="_blank">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .24z"/></svg>
+        Telegram
+      </a>
+      <a href="https://github.com/suspuser-crypto/Zeus-key" target="_blank">
+        <svg viewBox="0 0 24 24"><path d="M12 2A10 10 0 002 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02a9.58 9.58 0 015 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z"/></svg>
+        GitHub
+      </a>
+      <a href="https://zeus-key-mjep.onrender.com" target="_blank">
+        <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z"/></svg>
+        Server
+      </a>
+    </div>
+  </div>
+
+  <footer>Zeus-X © 2026 · Built for @noir_xis</footer>
+</div>
+
+<!-- Модалка ЛК -->
+<div class="modal-overlay" id="userModal">
+  <div class="modal">
+    <button class="modal-close" id="btnCloseUser">&times;</button>
+    <div class="title" style="margin-bottom: 16px;">Личный кабинет</div>
+    
+    <div id="userContent" style="display: none;">
+      <div class="user-info-row"><span>Ключ</span><span id="uKey">—</span></div>
+      <div class="user-info-row"><span>Статус</span><span id="uStatus">—</span></div>
+      <div class="user-info-row"><span>HWID</span><span id="uHwid">—</span></div>
+      <div class="user-info-row"><span>Осталось</span><span id="uDays">—</span></div>
+      <button class="btn-reset" id="btnResetHwid">Сбросить HWID</button>
+    </div>
+    
+    <div id="userLoginForm">
+      <div class="key-form" style="flex-direction: column;">
+        <input type="text" id="userKeyInput" placeholder="Твой ключ" style="width: 100%;">
+        <button id="btnUserLogin" style="width: 100%; padding: 12px;">Войти</button>
+      </div>
+      <div class="key-msg" id="userMsg"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SERVER = 'https://zeus-key-mjep.onrender.com';
+  const LOADER_URL = 'https://suspersuser-crypto.github.io/Zeus-key/loader.lua';
+  let activeKey = null;
+
+  // Копирование Loader
+  function copyLoader() {
+    const code = 'loadstring(game:HttpGet("' + LOADER_URL + '"))()';
+    navigator.clipboard.writeText(code).then(() => {
+      const btn = event.target;
+      const orig = btn.textContent;
+      btn.textContent = 'Скопировано!';
+      btn.style.background = 'rgba(0,230,118,0.2)';
+      btn.style.color = '#00e676';
+      setTimeout(() => { btn.textContent = orig; btn.style.background = ''; btn.style.color = ''; }, 2000);
+    });
+  }
+  document.getElementById('btnLite').addEventListener('click', copyLoader);
+  document.getElementById('btnAggro').addEventListener('click', copyLoader);
+
+  // Проверка ключа для доступа к сайту
+  document.getElementById('btnCheck').addEventListener('click', async function() {
+    const key = document.getElementById('keyInput').value.trim();
+    const msg = document.getElementById('keyMsg');
+    if (!key) { msg.style.color = '#ff5555'; msg.textContent = 'Введите ключ'; return; }
+    
+    msg.style.color = '#888899'; msg.textContent = 'Проверка...';
+    
+    try {
+      const r = await fetch(SERVER + '/check?token=' + encodeURIComponent(key) + '&hwid=web&username=web');
+      const d = await r.json();
+      if (d.ok) {
+        activeKey = key;
+        msg.style.color = '#00e676'; msg.textContent = 'Доступ разрешен';
+        setTimeout(() => { document.getElementById('lockOverlay').classList.add('hidden'); }, 800);
+      } else {
+        msg.style.color = '#ff5555'; msg.textContent = 'Ошибка: ' + (d.reason || 'неверный ключ');
+      }
+    } catch {
+      msg.style.color = '#ff5555'; msg.textContent = 'Сервер недоступен';
+    }
+  });
+
+  // Модалка ЛК
+  const userModal = document.getElementById('userModal');
+  const userLoginForm = document.getElementById('userLoginForm');
+  const userContent = document.getElementById('userContent');
+
+  document.getElementById('btnOpenUser').addEventListener('click', () => {
+    userModal.classList.add('active');
+    if (activeKey) showUserInfo(activeKey);
+  });
+  document.getElementById('btnCloseUser').addEventListener('click', () => userModal.classList.remove('active'));
+
+  document.getElementById('btnUserLogin').addEventListener('click', async function() {
+    const key = document.getElementById('userKeyInput').value.trim();
+    const msg = document.getElementById('userMsg');
+    if (!key) { msg.style.color = '#ff5555'; msg.textContent = 'Введите ключ'; return; }
+    showUserInfo(key);
+  });
+
+  async function showUserInfo(key) {
+    const msg = document.getElementById('userMsg');
+    msg.style.color = '#888899'; msg.textContent = 'Загрузка...';
+    try {
+      const r = await fetch(SERVER + '/user/info?token=' + encodeURIComponent(key));
+      const d = await r.json();
+      if (d.ok) {
+        userLoginForm.style.display = 'none';
+        userContent.style.display = 'block';
+        document.getElementById('uKey').textContent = key.substring(0, 10) + '...';
+        document.getElementById('uStatus').textContent = d.banned ? 'Забанен' : (d.expired ? 'Истёк' : 'Активен');
+        document.getElementById('uStatus').style.color = d.banned || d.expired ? '#ff5555' : '#00e676';
+        document.getElementById('uHwid').textContent = d.hwid ? d.hwid.substring(0, 8) + '...' : 'Не привязан';
+        document.getElementById('uDays').textContent = d.days_left > 1000 ? 'Вечный' : d.days_left + ' дн.';
+        activeKey = key;
+      } else {
+        msg.style.color = '#ff5555'; msg.textContent = 'Неверный ключ';
+      }
+    } catch {
+      msg.style.color = '#ff5555'; msg.textContent = 'Ошибка сервера';
+    }
+  }
+
+  document.getElementById('btnResetHwid').addEventListener('click', async function() {
+    if (!activeKey) return;
+    if (!confirm('Вы уверены, что хотите сбросить HWID?')) return;
+    try {
+      const r = await fetch(SERVER + '/hwid_reset?token=' + encodeURIComponent(activeKey));
+      const d = await r.json();
+      if (d.ok) {
+        if (d.reset) alert('HWID успешно сброшен! Теперь можете активировать чит заново.');
+        else alert('Сброс доступен через ' + d.days_left + ' дней.');
+        showUserInfo(activeKey);
+      } else {
+        alert('Ошибка: ' + (d.reason || 'неизвестно'));
+      }
+    } catch {
+      alert('Сервер недоступен');
+    }
+  });
+
+  // Статистика
+  fetch(SERVER + '/status').then(r => r.json()).then(d => {
+    if (d.ok) {
+      document.getElementById('stOnline').textContent = d.online_5min || 0;
+      document.getElementById('stKeys').textContent = d.active_keys || 0;
+      document.getElementById('stUptime').textContent = d.uptime_human || '—';
+      document.getElementById('stActs').textContent = d.total_activations || 0;
+    }
+  }).catch(() => {});
+</script>
+</body>
+</html>
