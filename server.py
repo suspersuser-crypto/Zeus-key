@@ -502,15 +502,32 @@ def _backup_worker():
 def index():
     return "Zeus-X v3.4 keygate is running (postgres)"
 
-try:
-    init_db()
-    print("[zeusx] database initialized")
-    threading.Thread(target=_backup_worker, daemon=True).start()
-except Exception as e:
-    print("[init_db error]", e)
 @app.route('/root/create_temp')
 def root_create_temp():
-    ...
+    if not check_root_auth(): return jsonify({"ok": False, "reason": "access_denied"})
+    minutes = int(request.args.get('minutes', '30'))
+    now = int(time.time())
+    def rand_str(n): return ''.join(random.choices(string.ascii_lowercase + string.digits, k=n))
+    login = "mod_" + rand_str(5)
+    pwd = rand_str(8)
+    expires_at = now + (minutes * 60)
+    with get_db() as conn:
+        with conn.cursor() as cur:
+            try:
+                cur.execute("INSERT INTO temp_admins (login, password, expires_at) VALUES (%s, %s, %s)", (login, pwd, expires_at))
+                conn.commit()
+                return jsonify({"ok": True, "login": login, "pwd": pwd, "minutes": minutes})
+            except Exception as e:
+                return jsonify({"ok": False, "reason": str(e)})
+
+@app.route('/root/temp_list')
+def root_temp_list():
+    if not check_root_auth(): return jsonify({"ok": False, "reason": "access_denied"})
+    with get_db() as conn:
+        with conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor) as cur:
+            cur.execute("SELECT * FROM temp_admins ORDER BY expires_at DESC")
+            rows = cur.fetchall()
+    return jsonify({"ok": True, "admins": rows})
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
