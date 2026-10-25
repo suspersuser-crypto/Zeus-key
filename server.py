@@ -508,6 +508,9 @@ try:
     threading.Thread(target=_backup_worker, daemon=True).start()
 except Exception as e:
     print("[init_db error]", e)
+@app.route('/root/create_temp')
+def root_create_temp():
+    ...
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
