@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Zeus-X · MEGA ADMIN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #05040a;
+            --glass: rgba(20, 15, 30, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent: #b482ff;
+            --accent-red: #ff2a2a;
+            --accent-green: #00e676;
+            --text: #ffffff;
+            --muted: #8e8e99;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; user-select: none; }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Анимированный фон */
+        .bg-anim {
+            position: fixed; top: -50%; left: -50%; width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(107, 63, 194, 0.15) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(255, 42, 42, 0.1) 0%, transparent 50%);
+            animation: rotate 20s linear infinite;
+            z-index: -1;
+        }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+        /* Стеклянная панель */
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        /* Экран входа */
+        #login-screen {
+            position: absolute; inset: 0; display: flex; justify-content: center; align-items: center; z-index: 10;
+            transition: opacity 0.5s ease;
+        }
+        .login-box {
+            padding: 40px; width: 400px; text-align: center;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        .login-box h1 {
+            font-size: 46px; font-weight: 800;
+            background: linear-gradient(135deg, #b482ff, #ff2a2a);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(180, 130, 255, 0.4);
+        }
+        .login-box p { color: var(--muted); font-size: 12px; letter-spacing: 3px; margin-bottom: 30px; text-transform: uppercase; }
+
+        /* Поля ввода */
+        input {
+            width: 100%; padding: 14px; background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(180, 130, 255, 0.3); border-radius: 12px;
+            color: white; font-size: 15px; outline: none; transition: 0.3s; margin-bottom: 20px;
+        }
+        input:focus { border-color: var(--accent); box-shadow: 0 0 20px rgba(180, 130, 255, 0.3); }
+
+        /* Кнопки с блумом */
+        button {
+            width: 100%; padding: 14px; background: linear-gradient(135deg, #6b3fc2, #b482ff);
+            border: none; border-radius: 12px; color: white; font-size: 15px; font-weight: 700;
+            text-transform: uppercase; cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 0 20px rgba(107, 63, 194, 0.4);
+        }
+        button:hover { box-shadow: 0 0 40px rgba(180, 130, 255, 0.8); transform: translateY(-2px); }
+        button:active { transform: translateY(1px); }
+
+        /* Главное меню (скрыто по умолчанию) */
+        #main-app { display: none; width: 100%; height: 100%; padding: 20px; gap: 20px; }
+        
+        /* Боковая панель */
+        .sidebar { width: 260px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .sidebar-item {
+            padding: 14px 20px; border-radius: 12px; cursor: pointer; font-weight: 600; color: var(--muted);
+            transition: 0.3s; display: flex; align-items: center; gap: 10px;
+        }
+        .sidebar-item:hover, .sidebar-item.active {
+            background: rgba(180, 130, 255, 0.1); color: white; border-left: 4px solid var(--accent);
+        }
+
+        /* Рабочая область */
+        .workspace { flex: 1; padding: 30px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+        
+        .header-row { display: flex; justify-content: space-between; align-items: center; }
+        .header-row h2 { font-size: 24px; font-weight: 800; }
+
+        .card {
+            background: rgba(255,255,255,0.02); border: 1px solid var(--glass-border);
+            border-radius: 16px; padding: 24px; transition: 0.3s;
+        }
+        .card:hover { border-color: rgba(180,130,255,0.3); background: rgba(255,255,255,0.04); }
+
+        /* Таблицы */
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+        th { color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+        tr:hover { background: rgba(180, 130, 255, 0.05); }
+
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(180, 130, 255, 0.3); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="bg-anim"></div>
+
+    <!-- ЭКРАН ВХОДА -->
+    <div id="login-screen">
+        <div class="glass-panel login-box">
+            <h1>ZEUS-X</h1>
+            <p>MEGA ADMIN CONSOLE</p>
+            <input type="password" id="pwdInput" placeholder="Введите пароль от Render">
+            <button onclick="doLogin()">Войти в систему</button>
+        </div>
+    </div>
+
+    <!-- ГЛАВНОЕ МЕНЮ -->
+    <div id="main-app">
+        <div class="glass-panel sidebar">
+            <div style="font-size: 24px; font-weight: 900; color: var(--accent); margin-bottom: 20px;">ZEUS-X</div>
+            <div class="sidebar-item active" onclick="switchTab('keys')">🔑 Ключи</div>
+            <div class="sidebar-item" onclick="switchTab('cheats')">🎮 Активации</div>
+            <div class="sidebar-item" onclick="switchTab('bot')">🤖 Бот-юзеры</div>
+            <div class="sidebar-item" onclick="switchTab('promo')">🎁 Промокоды</div>
+            <div style="margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 10px;">
+                <div class="sidebar-item" onclick="logout()" style="color: var(--accent-red);">🚪 Выйти</div>
+            </div>
+        </div>
+        <div class="glass-panel workspace" id="workspace">
+            <!-- Сюда JS будет загружать контент -->
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    // Настройки
+    const SERVER = "https://zeus-key-mjep.onrender.com";
+    let pwd = "";
+    let login = "admin";
+
+    // ==========================================
+    // 1. ЛОГИКА ВХОДА
+    // ==========================================
+    async function doLogin() {
+        const input = document.getElementById('pwdInput');
+        const btn = document.querySelector('#login-screen button');
+        pwd = input.value;
+
+        if (!pwd) {
+            alert("Введите пароль!");
+            return;
+        }
+
+        btn.textContent = "ПОДКЛЮЧЕНИЕ...";
+        btn.disabled = true;
+
+        try {
+            const res = await fetch(`${SERVER}/admin/login?login=${login}&pwd=${encodeURIComponent(pwd)}`);
+            const data = await res.json();
+
+            if (data.ok) {
+                // Успешный вход
+                document.getElementById('login-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('main-app').style.display = 'flex';
+                    loadKeys(); // Загружаем первую вкладку
+                }, 500);
+            } else {
+                alert("Неверный пароль!");
+                btn.textContent = "Войти в систему";
+                btn.disabled = false;
+            }
+        } catch (e) {
+            alert("Сервер недоступен!");
+            btn.textContent = "Войти в систему";
+            btn.disabled = false;
+        }
+    }
+
+    // ==========================================
+    // 2. ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК
+    // ==========================================
+    function switchTab(tabName) {
+        // Меняем активный класс в меню
+        document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+        event.target.classList.add('active');
+
+        // Загружаем контент
+        const ws = document.getElementById('workspace');
+        ws.innerHTML = '<div style="color: var(--muted); text-align: center; margin-top: 100px;">Загрузка...</div>';
+
+        if (tabName === 'keys') loadKeys();
+        else if (tabName === 'cheats') loadCheats();
+        else if (tabName === 'bot') loadBotUsers();
+        else if (tabName === 'promo') loadPromo();
+    }
+
+    // ==========================================
+    // 3. ЗАГРУЗКА ДАННЫХ С СЕРВЕРА
+    // ==========================================
+    
+    // ВКЛАДКА КЛЮЧИ
+    async function loadKeys() {
+        try {
+            const res = await fetch(`${SERVER}/admin/keys?login=${login}&pwd=${encodeURIComponent(pwd)}`);
+            const data = await res.json();
+            const ws = document.getElementById('workspace');
+
+            if (!data.ok) return;
+
+            let html = `
+                <div class="header-row">
+                    <h2>Управление ключами</h2>
+                    <button onclick="generateKey()" style="width: auto; padding: 10px 20px; background: var(--accent-green); color: black; box-shadow: none;">⚡ Создать ключ</button>
+                </div>
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ключ</th>
+                                <th>Юзер</th>
+                                <th>IP / HWID</th>
+                                <th>Версия</th>
+                                <th>Дней</th>
+                                <th>Действия</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            data.keys.forEach(k => {
+                let statusColor = k.banned ? 'var(--accent-red)' : (k.used ? 'var(--accent-green)' : 'var(--muted)');
+                html += `
+                    <tr>
+                        <td style="font-family: 'JetBrains Mono'; color: ${statusColor};">${k.key}</td>
+                        <td>${k.username || '—'}</td>
+                        <td>${k.ip || '—'} <br> <span style="font-size: 10px; color: var(--muted);">${k.hwid ? k.hwid.slice(0,10)+'...' : '—'}</span></td>
+                        <td>${k.version || '—'}</td>
+                        <td style="color: ${k.days_left < 3 ? 'var(--accent-red)' : 'white'};">${k.days_left}</td>
+                        <td>
+                            <button onclick="banKey('${k.key}')" style="width: auto; padding: 5px 10px; background: var(--accent-red); font-size: 10px; box-shadow: none;">${k.banned ? 'Разбан' : 'Бан'}</button>
+                            <button onclick="resetHwid('${k.key}')" style="width: auto; padding: 5px 10px; background: #3b82f6; font-size: 10px; box-shadow: none;">HWID</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table></div>`;
+            ws.innerHTML = html;
+        } catch (e) {
+            document.getElementById('workspace').innerHTML = `<div style="color: var(--accent-red);">Ошибка загрузки: ${e}</div>`;
+        }
+    }
+
+    // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ КЛЮЧЕЙ ===
+    async function generateKey() {
+        const res = await fetch(`${SERVER}/admin/generate_one?days=7&login=${login}&pwd=${encodeURIComponent(pwd)}`);
+        const data = await res.json();
+        if (data.ok) {
+            navigator.clipboard.writeText(data.key);
+            alert(`Ключ создан и скопирован:\n${data.key}`);
+            loadKeys();
+        }
+    }
+
+    async function banKey(key) {
+        await fetch(`${SERVER}/admin/ban?key=${key}&login=${login}&pwd=${encodeURIComponent(pwd)}`);
+        loadKeys();
+    }
+
+    async function resetHwid(key) {
+        await fetch(`${SERVER}/admin/reset_hwid?key=${key}&login=${login}&pwd=${encodeURIComponent(pwd)}`);
+        loadKeys();
+    }
+
+    // === ЗАГЛУШКИ ДЛЯ ОСТАЛЬНЫХ ВКЛАДОК ===
+    function loadCheats() {
+        document.getElementById('workspace').innerHTML = '<h2>🎮 Активации читов</h2><div class="card">Тут будет таблица активаций...</div>';
+    }
+    function loadBotUsers() {
+        document.getElementById('workspace').innerHTML = '<h2>🤖 Юзеры Бота</h2><div class="card">Тут будут юзеры телеграм бота...</div>';
+    }
+    function loadPromo() {
+        document.getElementById('workspace').innerHTML = '<h2>🎁 Промокоды</h2><div class="card">Тут будет создание промокодов...</div>';
+    }
+
+    function logout() {
+        location.reload();
+    }
+</script>
+// ВКЛАДКА АКТИВАЦИИ (Логи читов)
+async function loadCheats() {
+    const ws = document.getElementById('workspace');
+    ws.innerHTML = '<div style="color: var(--muted); text-align: center; margin-top: 100px;">Загрузка логов...</div>';
+
+    try {
+        const res = await fetch(`${SERVER}/admin/activations?login=${login}&pwd=${encodeURIComponent(pwd)}`);
+        const data = await res.json();
+
+        if (!data.ok) return;
+
+        let html = `
+            <div class="header-row">
+                <h2>🎮 Логи активаций</h2>
+                <button onclick="loadCheats()" style="width: auto; padding: 10px 20px; background: rgba(180,130,255,0.2); color: var(--accent); box-shadow: none;">🔄 Обновить</button>
+            </div>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ключ</th>
+                            <th>Пользователь</th>
+                            <th>HWID (Устройство)</th>
+                            <th>IP Адрес</th>
+                            <th>Версия</th>
+                            <th>Время входа</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        if (data.activations.length === 0) {
+            html += `<tr><td colspan="6" style="text-align: center; color: var(--muted);">Пока нет активаций</td></tr>`;
+        } else {
+            data.activations.forEach(a => {
+                // Форматируем время
+                let dateStr = "—";
+                if (a.activated_at) {
+                    const d = new Date(a.activated_at * 1000);
+                    dateStr = d.toLocaleString('ru-RU');
+                }
+
+                // Красим версию (Lite - синий, Aggressive - красный)
+                let verColor = a.version === 'lite' ? '#3b82f6' : (a.version === 'aggressive' ? '#ff2a2a' : 'var(--muted)');
+
+                html += `
+                    <tr>
+                        <td style="font-family: 'JetBrains Mono'; color: var(--muted); font-size: 11px;">${a.key}</td>
+                        <td><b>${a.username || 'Unknown'}</b></td>
+                        <td style="font-family: 'JetBrains Mono'; font-size: 11px; color: var(--muted);">${a.hwid || '—'}</td>
+                        <td style="font-family: 'JetBrains Mono'; color: var(--accent-green);">${a.ip || '—'}</td>
+                        <td style="color: ${verColor}; font-weight: bold; text-transform: uppercase;">${a.version || '—'}</td>
+                        <td style="color: var(--muted); font-size: 12px;">${dateStr}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        html += `</tbody></table></div>`;
+        ws.innerHTML = html;
+
+    } catch (e) {
+        ws.innerHTML = `<div style="color: var(--accent-red);">Ошибка загрузки: ${e}</div>`;
+    }
+}
+// ВКЛАДКА БОТ-ЮЗЕРЫ
+async function loadBotUsers() {
+    const ws = document.getElementById('workspace');
+    ws.innerHTML = '<div style="color: var(--muted); text-align: center; margin-top: 100px;">Загрузка юзеров...</div>';
+
+    try {
+        const res = await fetch(`${SERVER}/admin/bot_users?login=${login}&pwd=${encodeURIComponent(pwd)}`);
+        const data = await res.json();
+
+        if (!data.ok) return;
+
+        let html = `
+            <div class="header-row">
+                <h2>🤖 Юзеры Telegram Бота</h2>
+                <button onclick="loadBotUsers()" style="width: auto; padding: 10px 20px; background: rgba(180,130,255,0.2); color: var(--accent); box-shadow: none;">🔄 Обновить</button>
+            </div>
+            <div class="card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>TG ID</th>
+                            <th>Имя / Ник</th>
+                            <th>Выданный промокод</th>
+                            <th>Первый вход</th>
+                            <th>Последний раз</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        if (data.users.length === 0) {
+            html += `<tr><td colspan="5" style="text-align: center; color: var(--muted);">Пока никто не заходил</td></tr>`;
+        } else {
+            data.users.forEach(u => {
+                const joinDate = u.join_date ? new Date(u.join_date * 1000).toLocaleString('ru-RU') : '—';
+                const lastSeen = u.last_seen ? new Date(u.last_seen * 1000).toLocaleString('ru-RU') : '—';
+
+                html += `
+                    <tr>
+                        <td style="font-family: 'JetBrains Mono'; color: var(--accent);">${u.tg_id}</td>
+                        <td><b>${u.first_name || 'User'}</b> <br><span style="color: var(--muted); font-size: 11px;">@${u.username || 'no_username'}</span></td>
+                        <td style="font-family: 'JetBrains Mono'; color: var(--accent-green);">${u.promo_used || '—'}</td>
+                        <td style="color: var(--muted); font-size: 12px;">${joinDate}</td>
+                        <td style="color: var(--muted); font-size: 12px;">${lastSeen}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        html += `</tbody></table></div>`;
+        ws.innerHTML = html;
+
+    } catch (e) {
+        ws.innerHTML = `<div style="color: var(--accent-red);">Ошибка загрузки: ${e}</div>`;
+    }
+}
+
+// ВКЛАДКА ПРОМОКОДЫ
+function loadPromo() {
+    const ws = document.getElementById('workspace');
+    ws.innerHTML = `
+        <div class="header-row">
+            <h2>🎁 Генератор промокодов</h2>
+        </div>
+        <div class="card" style="max-width: 500px;">
+            <div style="margin-bottom: 15px;">
+                <label style="color: var(--muted); font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block;">НАЗВАНИЕ КОДА (на англ.)</label>
+                <input type="text" id="newPromoCode" placeholder="например: ZEUS2026" style="text-transform: uppercase;">
+            </div>
+            <div style="margin-bottom: 15px;">
+                <label style="color: var(--muted); font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block;">НА СКОЛЬКО ДНЕЙ</label>
+                <input type="number" id="newPromoDays" value="3">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="color: var(--muted); font-size: 12px; font-weight: bold; margin-bottom: 5px; display: block;">МАКСИМУМ АКТИВАЦИЙ</label>
+                <input type="number" id="newPromoMax" value="10">
+            </div>
+            <button onclick="createPromo()" style="background: var(--accent-green); color: black;">Создать промокод</button>
+        </div>
+    `;
+}
+
+async function createPromo() {
+    const code = document.getElementById('newPromoCode').value.toUpperCase();
+    const days = document.getElementById('newPromoDays').value;
+    const maxUses = document.getElementById('newPromoMax').value;
+
+    if (!code) {
+        alert("Введите название кода!");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${SERVER}/admin/create_promo?code=${code}&days=${days}&max_uses=${maxUses}&login=${login}&pwd=${encodeURIComponent(pwd)}`);
+        const data = await res.json();
+
+        if (data.ok) {
+            alert(`Промокод ${code} успешно создан!`);
+            document.getElementById('newPromoCode').value = '';
+        } else {
+            alert("Ошибка: " + (data.reason === 'code_exists' ? 'Такой код уже существует' : data.reason));
+        }
+    } catch (e) {
+        alert("Сервер недоступен!");
+    }
+}
+    <script>
+        // ==========================================
+        // ФИНАЛЬНАЯ ПОЛИРОВКА (Анимации)
+        // ==========================================
+        
+        // Сохраняем старую функцию
+        const oldSwitchTab = switchTab;
+
+        // Переопределяем её с анимацией
+        window.switchTab = function(tabName) {
+            // Меняем активный класс в меню
+            document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const ws = document.getElementById('workspace');
+            
+            // Эффект "выцветания" старого контента
+            ws.style.opacity = '0';
+            ws.style.transform = 'translateY(10px)';
+            ws.style.transition = 'all 0.2s ease';
+
+            setTimeout(() => {
+                // Загружаем новый контент
+                if (tabName === 'keys') loadKeys();
+                else if (tabName === 'cheats') loadCheats();
+                else if (tabName === 'bot') loadBotUsers();
+                else if (tabName === 'promo') loadPromo();
+
+                // Эффект "появления" нового контента
+                ws.style.opacity = '1';
+                ws.style.transform = 'translateY(0)';
+            }, 200);
+        };
+
+        // Эффект наведения на карточки (микро-анимация)
+        document.addEventListener('mouseover', function(e) {
+            if (e.target.closest('.card')) {
+                e.target.closest('.card').style.boxShadow = '0 0 30px rgba(180, 130, 255, 0.1)';
+            }
+        });
+        document.addEventListener('mouseout', function(e) {
+            if (e.target.closest('.card')) {
+                e.target.closest('.card').style.boxShadow = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
