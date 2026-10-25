@@ -8,9 +8,9 @@ import psycopg2
 import psycopg2.extras
 
 # --- НАСТРОЙКИ (в Render они подтянутся из Environment) ---
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "ВСТАВЬ_СЮДА_ТОКЕН_БОТА")
+BOT_TOKEN = os.environ.get("BOT_TOKEN", "8965266590:AAGKQ_1vW5LTdgbdwGhnrnfYsMLpgy_FreE")
 DATABASE_URL = os.environ.get('DATABASE_URL', '')
-ADMIN_ID = int(os.environ.get("ADMIN_ID", "0"))
+ADMIN_ID = int(os.environ.get("ADMIN_ID", "8882559913"))
 
 bot = telebot.TeleBot(BOT_TOKEN)
 
