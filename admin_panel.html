@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Админ-панель Zeus-X</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, sans-serif; background: radial-gradient(ellipse at top, #1a0f2e 0%, #0a0612 60%); color: #ebe1fa; min-height: 100vh; padding: 24px; }
+  .container { max-width: 1400px; margin: 0 auto; }
+  h1 { font-size: 28px; background: linear-gradient(135deg, #8c5aff 0%, #dc96ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 24px; letter-spacing: 2px; }
+  
+  .login-box { background: rgba(26, 15, 46, 0.6); border: 1px solid #6b46c2; border-radius: 16px; padding: 32px; max-width: 420px; margin: 80px auto; text-align: center; backdrop-filter: blur(20px); }
+  .login-box input { width: 100%; padding: 14px; background: #0a0612; border: 1px solid #6b46c2; border-radius: 10px; color: #ebe1fa; font-size: 15px; margin-bottom: 14px; }
+  
+  .btn { background: linear-gradient(135deg, #6b3fc2, #b482ff); color: white; border: none; padding: 14px 32px; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 14px; letter-spacing: 1px; transition: transform 0.2s; }
+  .btn:hover { transform: translateY(-2px); }
+  .btn.red { background: linear-gradient(135deg, #8a2030, #d84060); }
+  .btn.green { background: linear-gradient(135deg, #2a8f5a, #4ecca0); }
+  .btn.blue { background: linear-gradient(135deg, #2a5f8f, #4ea8cc); }
+  .btn.small { padding: 8px 16px; font-size: 12px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 24px; }
+  .stat { background: rgba(26, 15, 46, 0.6); border: 1px solid #6b46c2; border-radius: 12px; padding: 16px; }
+  .stat .label { color: #a195c1; font-size: 11px; margin-bottom: 6px; letter-spacing: 1px; }
+  .stat .value { font-size: 22px; font-weight: 800; color: #b482ff; }
+  .stat.green .value { color: #4ecca0; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid rgba(107, 70, 194, 0.3); padding-bottom: 8px; flex-wrap: wrap; }
+  .tab { padding: 10px 20px; background: rgba(38, 22, 62, 0.4); border: 1px solid rgba(107, 70, 194, 0.3); border-radius: 10px; color: #a195c1; cursor: pointer; font-weight: 700; font-size: 13px; letter-spacing: 1px; transition: all 0.3s; }
+  .tab:hover { color: #ebe1fa; border-color: #b482ff; }
+  .tab.active { background: linear-gradient(135deg, #6b3fc2, #b482ff); color: white; border-color: #b482ff; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .table-wrap { max-height: 600px; overflow-y: auto; border-radius: 12px; }
+  table { width: 100%; border-collapse: collapse; background: rgba(26, 15, 46, 0.6); border-radius: 12px; overflow: hidden; }
+  th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(107, 70, 194, 0.3); font-size: 12px; }
+  th { background: rgba(38, 22, 62, 0.8); color: #b482ff; font-weight: 700; position: sticky; top: 0; z-index: 2; }
+  tr:hover { background: rgba(140, 90, 255, 0.08); }
+  .mono { font-family: 'Courier New', monospace; font-size: 11px; }
+  #panel { display: none; }
+</style>
+</head><body>
+<div class="container">
+  <!-- Логин -->
+  <div class="login-box" id="loginBox">
+    <h1>ZEUS-X</h1>
+    <p style="color: #a195c1; margin-bottom: 20px;">admin panel</p>
+    <input type="text" id="loginInput" placeholder="логин" value="admin">
+    <input type="password" id="pwdInput" placeholder="пароль">
+    <button class="btn" onclick="doLogin()">войти</button>
+    <p style="color: #ff6b8a; margin-top: 10px;" id="loginError"></p>
+  </div>
+
+  <!-- Панель -->
+  <div id="panel">
+    <h1>ZEUS-X · Admin</h1>
+    <div style="text-align: right; margin-bottom: 12px;">
+      <button class="btn small" onclick="logout()">выход</button>
+    </div>
+
+    <div class="stats" id="statsBox"></div>
+
+    <div class="tabs">
+      <div class="tab active" data-tab="keys" onclick="switchTab('keys')">🔑 Ключи</div>
+      <div class="tab" data-tab="cheats" onclick="switchTab('cheats')">🎮 Активации (Читы)</div>
+      <div class="tab" data-tab="bot" onclick="switchTab('bot')">🤖 Telegram Бот</div>
+      <div class="tab" data-tab="promo" onclick="switchTab('promo')">🎁 Промокоды</div>
+      <div class="tab" data-tab="stats" onclick="switchTab('stats')">📈 Статистика</div>
+    </div>
+
+    <!-- Вкладка Ключи -->
+    <div class="tab-panel active" id="tab-keys">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Ключ</th><th>Юзер</th><th>IP</th><th>Версия</th><th>Дней</th><th>Статус</th></tr></thead>
+          <tbody id="keysBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Вкладка Читы -->
+    <div class="tab-panel" id="tab-cheats">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Ключ</th><th>HWID</th><th>IP</th><th>Версия</th><th>Время входа</th></tr></thead>
+          <tbody id="cheatsBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Вкладка Бот -->
+    <div class="tab-panel" id="tab-bot">
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>TG ID</th><th>Имя / Ник</th><th>Промокод</th><th>Заход</th><th>Последний</th></tr></thead>
+          <tbody id="botBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Вкладка Промокоды -->
+    <div class="tab-panel" id="tab-promo">
+      <div style="max-width: 400px; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 12px;">
+        <h3 style="margin-bottom: 15px;">Создать промокод</h3>
+        <input type="text" id="promoCode" placeholder="КОД" style="width: 100%; padding: 12px; margin-bottom: 10px; background: #0a0612; border: 1px solid #6b46c2; border-radius: 10px; color: white;">
+        <input type="number" id="promoDays" placeholder="Дней" value="3" style="width: 100%; padding: 12px; margin-bottom: 10px; background: #0a0612; border: 1px solid #6b46c2; border-radius: 10px; color: white;">
+        <input type="number" id="promoMax" placeholder="Макс. активаций" value="10" style="width: 100%; padding: 12px; margin-bottom: 15px; background: #0a0612; border: 1px solid #6b46c2; border-radius: 10px; color: white;">
+        <button class="btn green" onclick="createPromo()" style="width: 100%;">Создать</button>
+        <p id="promoMsg" style="margin-top: 10px;"></p>
+      </div>
+    </div>
+
+    <!-- Вкладка Статистика -->
+    <div class="tab-panel" id="tab-stats">
+      <div class="stats" id="statsFullBox" style="margin-bottom: 24px;"></div>
+    </div>
+
+  </div>
+</div>
+<script>
+  const SERVER = 'https://zeus-key-mjep.onrender.com';
+  let login = ''; let pwd = '';
+
+  function authQS() { return 'login=' + encodeURIComponent(login) + '&pwd=' + encodeURIComponent(pwd); }
+
+  function doLogin() {
+    login = document.getElementById('loginInput').value.trim();
+    pwd = document.getElementById('pwdInput').value;
+    fetch(SERVER + '/admin/login?' + authQS()).then(r => r.json()).then(data => {
+        if (data.ok) { 
+            document.getElementById('loginBox').style.display = 'none'; 
+            document.getElementById('panel').style.display = 'block';
+            loadKeys(); 
+        } else { 
+            document.getElementById('loginError').textContent = 'Неверный пароль'; 
+        }
+    }).catch(() => { document.getElementById('loginError').textContent = 'Сервер не отвечает'; });
+  }
+
+  function logout() { location.reload(); }
+
+  function switchTab(name) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+    if (name === 'keys') loadKeys();
+    if (name === 'cheats') loadCheats();
+    if (name === 'bot') loadBot();
+    if (name === 'stats') loadStats();
+  }
+
+  // 1. КЛЮЧИ
+  function loadKeys() {
+    fetch(SERVER + '/admin/keys?' + authQS()).then(r => r.json()).then(data => {
+        if (!data.ok) return;
+        document.getElementById('statsBox').innerHTML = `
+            <div class="stat"><div class="label">АКТИВАЦИЙ</div><div class="value">${data.activations_left}</div></div>
+            <div class="stat"><div class="label">ВСЕГО КЛЮЧЕЙ</div><div class="value">${data.total_keys}</div></div>
+        `;
+        const tbody = document.getElementById('keysBody'); tbody.innerHTML = '';
+        data.keys.forEach(k => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="mono">${k.key}</td>
+                <td>${k.username || '—'}</td>
+                <td class="mono">${k.ip || '—'}</td>
+                <td>${k.version || '—'}</td>
+                <td>${k.days_left}</td>
+                <td style="color: ${k.banned ? 'red' : (k.used ? 'green' : 'grey')}">${k.banned ? 'Бан' : (k.used ? 'Активен' : 'Свободен')}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+  }
+
+  // 2. АКТИВАЦИИ ЧИТОВ (Кто, IP, HWID)
+  function loadCheats() {
+    fetch(SERVER + '/admin/activations?' + authQS()).then(r => r.json()).then(data => {
+        if (!data.ok) return;
+        const tbody = document.getElementById('cheatsBody'); tbody.innerHTML = '';
+        data.activations.forEach(a => {
+            const dt = new Date(a.activated_at * 1000).toLocaleString('ru-RU');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="mono">${a.key}</td>
+                <td class="mono">${(a.hwid || '').slice(0, 15)}...</td>
+                <td class="mono">${a.ip || '—'}</td>
+                <td style="color: #b482ff; font-weight: bold;">${a.version || '—'}</td>
+                <td>${dt}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+  }
+
+  // 3. БОТ-ЮЗЕРЫ
+  function loadBot() {
+    fetch(SERVER + '/admin/bot_users?' + authQS()).then(r => r.json()).then(data => {
+        if (!data.ok) return;
+        const tbody = document.getElementById('botBody'); tbody.innerHTML = '';
+        data.users.forEach(u => {
+            const join = new Date(u.join_date * 1000).toLocaleString('ru-RU');
+            const last = new Date(u.last_seen * 1000).toLocaleString('ru-RU');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="mono">${u.tg_id}</td>
+                <td>${u.first_name} <br><span style="color:#a195c1; font-size:10px;">@${u.username}</span></td>
+                <td class="mono" style="color: #4ecca0;">${u.promo_used || '—'}</td>
+                <td>${join}</td>
+                <td>${last}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    });
+  }
+
+  // 4. ПРОМОКОДЫ
+  async function createPromo() {
+    const code = document.getElementById('promoCode').value.toUpperCase();
+    const days = document.getElementById('promoDays').value;
+    const maxUses = document.getElementById('promoMax').value;
+    const msg = document.getElementById('promoMsg');
+
+    if (!code) return;
+    
+    const res = await fetch(SERVER + '/admin/create_promo?code=' + code + '&days=' + days + '&max_uses=' + maxUses + '&' + authQS());
+    const data = await res.json();
+    if (data.ok) {
+        msg.style.color = '#4ecca0'; msg.textContent = 'Промокод создан!';
+    } else {
+        msg.style.color = '#ff5555'; msg.textContent = 'Ошибка: ' + data.reason;
+    }
+  }
+
+  // 5. ОБЩАЯ СТАТИСТИКА
+  function loadStats() {
+    fetch(SERVER + '/admin/stats?' + authQS()).then(r => r.json()).then(data => {
+        if (!data.ok) return;
+        document.getElementById('statsFullBox').innerHTML = `
+            <div class="stat"><div class="label">ВСЕГО КЛЮЧЕЙ</div><div class="value">${data.total_keys}</div></div>
+            <div class="stat green"><div class="label">АКТИВНЫХ</div><div class="value">${data.active_keys}</div></div>
+            <div class="stat"><div class="label">АКТИВАЦИЙ СЕГОДНЯ</div><div class="value">${data.activations_today}</div></div>
+            <div class="stat"><div class="label">ОНЛАЙН 5М</div><div class="value">${data.online_5min}</div></div>
+        `;
+    });
+  }
+</script>
+</body>
+</html>
+    // 5. ОБЩАЯ СТАТИСТИКА
+    function loadStats() {
+      fetch(SERVER + '/admin/stats?' + authQS()).then(r => r.json()).then(data => {
+          if (!data.ok) return;
+          document.getElementById('statsFullBox').innerHTML = `
+              <div class="stat"><div class="label">ВСЕГО КЛЮЧЕЙ</div><div class="value">${data.total_keys}</div></div>
+              <div class="stat green"><div class="label">АКТИВНЫХ</div><div class="value">${data.active_keys}</div></div>
+              <div class="stat"><div class="label">АКТИВАЦИЙ СЕГОДНЯ</div><div class="value">${data.activations_today}</div></div>
+              <div class="stat"><div class="label">ОНЛАЙН 5М</div><div class="value">${data.online_5min}</div></div>
+          `;
+      });
+    }
+  </script>
+</body>
+</html>
