@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zeus-X · Access Control</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+  
+  :root {
+    --bg: #05040a; 
+    --panel: #120f1a; 
+    --accent: #8c5aff; 
+    --accent-glow: rgba(140, 90, 255, 0.4);
+    --green: #00e676; 
+    --red: #ff2a2a; 
+    --text: #ebe1fa; 
+    --muted: #8e8e99; 
+    --border: rgba(140, 90, 255, 0.3);
+  }
+
+  body { 
+    background: var(--bg); 
+    color: var(--text); 
+    min-height: 100vh; 
+    padding: 20px; 
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 50px;
+    overflow-x: hidden;
+  }
+  
+  body::before { 
+    content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: radial-gradient(circle at 15% 50%, rgba(140, 90, 255, 0.1), transparent 40%),
+                radial-gradient(circle at 85% 30%, rgba(255, 42, 42, 0.05), transparent 40%); 
+    z-index: -1; animation: pulse 8s infinite alternate; 
+  }
+  @keyframes pulse { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+
+  .container { width: 100%; max-width: 900px; }
+  
+  .box { 
+    background: rgba(18, 15, 26, 0.7); 
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--border); 
+    border-radius: 20px; 
+    padding: 40px; 
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.05); 
+    margin-bottom: 20px; 
+    animation: slideUp 0.5s ease;
+  }
+  @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+  h1 { 
+    font-size: 32px; 
+    font-weight: 800; 
+    background: linear-gradient(90deg, #b482ff, #ff2a2a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 10px; 
+    text-align: center;
+  }
+  p.subtitle { font-size: 14px; color: var(--muted); margin-bottom: 30px; text-align: center; }
+  
+  .input-group { margin-bottom: 20px; }
+  .input-group label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+  
+  input { 
+    width: 100%; 
+    padding: 16px; 
+    background: rgba(0,0,0,0.5); 
+    border: 1px solid var(--border); 
+    border-radius: 12px; 
+    color: white; 
+    font-size: 15px; 
+    outline: none; 
+    transition: 0.3s; 
+    font-family: 'JetBrains Mono', monospace;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 20px var(--accent-glow); background: rgba(0,0,0,0.8); }
+  
+  .btn { 
+    width: 100%;
+    padding: 16px; 
+    background: linear-gradient(135deg, #6b3fc2, #8c5aff); 
+    color: white; 
+    border: none; 
+    border-radius: 12px; 
+    font-weight: 800; 
+    font-size: 15px;
+    cursor: pointer; 
+    transition: 0.3s; 
+    box-shadow: 0 4px 15px rgba(140, 90, 255, 0.2); 
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 0 30px var(--accent-glow); }
+  .btn.green { background: linear-gradient(135deg, #1a6b40, #00e676); color: black; }
+  
+  .result-box { 
+    display: none; 
+    margin-top: 20px; 
+    padding: 25px; 
+    background: rgba(0, 230, 118, 0.05); 
+    border: 1px solid var(--green); 
+    border-radius: 15px; 
+    box-shadow: 0 0 30px rgba(0, 230, 118, 0.1);
+    animation: fadeIn 0.4s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .result-box h3 { color: var(--green); font-size: 18px; margin-bottom: 20px; text-align: center; font-weight: 800; letter-spacing: 1px; }
+  
+  .result-row { 
+    display: flex; justify-content: space-between; align-items: center; 
+    background: rgba(0,0,0,0.4); padding: 15px; border-radius: 10px; margin-bottom: 10px;
+    cursor: pointer; transition: 0.2s;
+  }
+  .result-row:hover { background: rgba(0,0,0,0.6); }
+  .result-row .label { color: var(--muted); font-size: 13px; font-weight: 600; }
+  .result-row code { font-family: 'JetBrains Mono', monospace; font-size: 16px; color: white; font-weight: 700; }
+  .result-row .time { color: var(--accent); font-weight: 800; font-size: 16px; }
+  
+  .table-wrap { overflow-x: auto; margin-top: 20px; border-radius: 12px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; text-align: left; min-width: 700px; background: var(--panel); }
+  th { background: rgba(0,0,0,0.3); color: var(--accent); padding: 15px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid var(--border); }
+  td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 13px; }
+  tr:hover { background: rgba(140, 90, 255, 0.05); }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  
+  .error { color: var(--red); font-size: 14px; margin-top: 15px; text-align: center; font-weight: 600; }
+  
+  .flex-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; align-items: flex-end; }
+  .flex-row input { margin-bottom: 0; height: 52px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ЭКРАН ВХОДА -->
+  <div class="box" id="authBox">
+    <h1>ROOT ACCESS</h1>
+    <p class="subtitle">Введите данные для управления системой.</p>
+    
+    <div class="input-group">
+      <label>Логин</label>
+      <input type="text" id="loginInput" placeholder="Введите логин">
+    </div>
+    
+    <div class="input-group">
+      <label>Пароль</label>
+      <input type="password" id="pwdInput" placeholder="••••••••">
+    </div>
+    
+    <button class="btn" onclick="doLogin()">ПОДТВЕРДИТЬ</button>
+    <p class="error" id="errorMsg"></p>
+  </div>
+
+  <!-- ЭКРАН УПРАВЛЕНИЯ -->
+  <div class="box" id="genBox" style="display:none;">
+    <h1>ACCESS CONTROL</h1>
+    <p class="subtitle">Генерация временных доступов и мониторинг активности.</p>
+    
+    <div class="flex-row">
+      <div style="flex: 1; min-width: 200px;">
+        <label style="color:var(--muted); font-size:12px; font-weight:700; margin-bottom:8px; display:block;">ВРЕМЯ ДОСТУПА (МИНУТ)</label>
+        <input type="number" id="minutesInput" value="30">
+      </div>
+      <div>
+        <button class="btn green" onclick="createTemp()" style="height: 52px;">СГЕНЕРИРОВАТЬ</button>
+      </div>
+    </div>
+    
+    <!-- Вывод ошибки генерации -->
+    <p class="error" id="genError" style="margin-bottom: 15px;"></p>
+
+    <!-- Окно результата -->
+    <div class="result-box" id="resultBox">
+      <h3>✅ ДОСТУП СОЗДАН</h3>
+      
+      <div class="result-row" onclick="copyText('resLogin', this)">
+        <span class="label">Логин:</span>
+        <code id="resLogin"></code>
+      </div>
+      
+      <div class="result-row" onclick="copyText('resPwd', this)">
+        <span class="label">Пароль:</span>
+        <code id="resPwd"></code>
+      </div>
+
+      <div class="result-row" style="cursor: default;">
+        <span class="label">Осталось времени:</span>
+        <span class="time" id="resMin"></span>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin: 30px 0 15px 0;">
+        <h3 style="font-size:18px; color:var(--text); margin:0;">Мониторинг модераторов</h3>
+        <button class="btn" style="width:auto; padding:8px 15px; font-size:12px; background:#333;" onclick="loadList()">🔄 Обновить</button>
+    </div>
+    
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Логин</th>
+            <th>Статус</th>
+            <th>IP</th>
+            <th>Устройство (ОС)</th>
+            <th>Последний вход</th>
+          </tr>
+        </thead>
+        <tbody id="tempBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SERVER = 'https://zeus-key-mjep.onrender.com';
+  let rootAuth = '';
+
+  async function doLogin() {
+    const l = document.getElementById('loginInput').value.trim();
+    const p = document.getElementById('pwdInput').value;
+    
+    if(!l || !p) {
+        document.getElementById('errorMsg').textContent = 'Заполните все поля';
+        return;
+    }
+    
+    rootAuth = 'login=' + encodeURIComponent(l) + '&pwd=' + encodeURIComponent(p);
+    
+    try {
+      const res = await fetch(SERVER + '/admin/login?' + rootAuth);
+      const data = await res.json();
+      if (data.ok) {
+        document.getElementById('authBox').style.display = 'none';
+        document.getElementById('genBox').style.display = 'block';
+        loadList();
+      } else {
+        document.getElementById('errorMsg').textContent = data.reason === 'banned_ip' ? 'ДОСТУП ЗАБЛОКИРОВАН' : 'Неверный логин или пароль';
+      }
+    } catch (e) {
+      document.getElementById('errorMsg').textContent = 'Ошибка соединения';
+    }
+  }
+
+  async function createTemp() {
+    const min = document.getElementById('minutesInput').value;
+    const errBox = document.getElementById('genError');
+    errBox.textContent = ''; // Очищаем старые ошибки
+    
+    try {
+      const res = await fetch(`${SERVER}/root/create_temp?minutes=${min}&${rootAuth}`);
+      const data = await res.json();
+      
+      if (data.ok) {
+        document.getElementById('resultBox').style.display = 'block';
+        document.getElementById('resLogin').textContent = data.login;
+        document.getElementById('resPwd').textContent = data.pwd;
+        document.getElementById('resMin').textContent = data.minutes + ' мин.';
+        loadList();
+      } else {
+        errBox.style.color = 'var(--red)';
+        errBox.textContent = 'Ошибка: ' + (data.reason === 'access_denied' ? 'Нет прав' : data.reason);
+      }
+    } catch (e) {
+      errBox.style.color = 'var(--red)';
+      errBox.textContent = 'Ошибка сети: ' + e.message;
+    }
+  }
+
+  function copyText(elementId, rowElement) {
+    const text = document.getElementById(elementId).innerText;
+    navigator.clipboard.writeText(text).then(() => {
+        const originalBg = rowElement.style.background;
+        rowElement.style.background = 'rgba(0, 230, 118, 0.2)';
+        setTimeout(() => { rowElement.style.background = originalBg; }, 300);
+    });
+  }
+
+  async function loadList() {
+    const res = await fetch(`${SERVER}/root/temp_list?${rootAuth}`);
+    const data = await res.json();
+    if (!data.ok) return;
+    
+    document.getElementById('tempBody').innerHTML = data.admins.map(a => {
+      const isExpired = (Date.now() / 1000) > a.expires_at;
+      const status = isExpired ? '<span style="color:var(--red);">Истек</span>' : '<span style="color:var(--green); font-weight:bold;">Активен</span>';
+      const lastLog = a.last_login > 0 ? new Date(a.last_login * 1000).toLocaleString('ru-RU') : '—';
+      
+      return `
+        <tr>
+          <td class="mono" style="color: var(--accent);">${a.login}</td>
+          <td>${status}</td>
+          <td class="mono">${a.last_ip}</td>
+          <td style="font-size:11px; color:var(--muted); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${a.last_agent}</td>
+          <td>${lastLog}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+</script>
+</body>
+</html>
