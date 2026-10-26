@@ -1,0 +1,361 @@
+ <!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Личный кабинет · Zeus-X</title>
+<meta name="description" content="Личный кабинет Zeus-X: проверка статуса ключа, сброс HWID, партнерская программа.">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+  :root {
+    --bg: #030305; --glass: rgba(20, 20, 25, 0.45); --glass-border: rgba(255, 255, 255, 0.08);
+    --text: #ffffff; --muted: #8e8e99; --red: #ff2a2a; --green: #00e676; --blue: #3b82f6;
+  }
+  body {
+    background-color: var(--bg); color: var(--text); min-height: 100vh;
+    display: flex; justify-content: center; align-items: center; padding: 20px;
+    background-image: radial-gradient(circle at 50% 0%, rgba(140, 90, 255, 0.08) 0%, transparent 60%);
+  }
+  .card {
+    background: var(--glass); backdrop-filter: blur(24px);
+    border: 1px solid var(--glass-border); border-radius: 24px; padding: 40px;
+    width: 100%; max-width: 480px; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+    animation: fadeUp 0.6s ease;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  
+  .header { text-align: center; margin-bottom: 30px; }
+  .header h1 { font-size: 28px; font-weight: 900; letter-spacing: -1px; }
+  .header h1 span { color: var(--red); }
+  .header p { color: var(--muted); font-size: 13px; margin-top: 6px; text-transform: uppercase; letter-spacing: 2px; }
+
+  .input-group { margin-bottom: 20px; }
+  .input-group label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; margin-bottom: 8px; text-transform: uppercase; }
+  .input-group input {
+    width: 100%; padding: 16px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border);
+    border-radius: 12px; color: white; font-family: monospace; font-size: 15px; outline: none; transition: 0.3s;
+  }
+  .input-group input:focus { border-color: var(--red); box-shadow: 0 0 15px rgba(255,42,42,0.2); }
+
+  .btn {
+    width: 100%; padding: 16px; border-radius: 12px; border: none;
+    font-weight: 800; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;
+    cursor: pointer; transition: 0.3s; color: white; background: var(--red);
+  }
+  .btn:hover { background: #ff4444; box-shadow: 0 0 20px rgba(255,42,42,0.4); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn.green { background: var(--green); color: black; }
+  .btn.blue { background: var(--blue); }
+
+  #profile { display: none; }
+  .row { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; }
+  .row:last-child { border-bottom: none; }
+  .row .label { color: var(--muted); }
+  .row .value { font-weight: 700; font-family: monospace; }
+  .value.green { color: var(--green); }
+  .value.red { color: var(--red); }
+
+  .msg { margin-top: 15px; font-size: 13px; font-weight: 600; text-align: center; min-height: 18px; }
+  
+  .promo-box { margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 12px; }
+  .promo-box label { display: block; font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 6px; text-transform: uppercase; }
+  .promo-row { display: flex; gap: 10px; }
+  .promo-row input { flex: 1; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 8px; color: white; font-family: monospace; text-transform: uppercase; }
+  .promo-row button { width: auto; padding: 10px 15px; background: var(--green); color: black; font-size: 12px; }
+
+  /* Стили для реферальной системы */
+  .ref-box { margin-top: 20px; padding: 20px; background: rgba(140, 90, 255, 0.05); border: 1px solid var(--glass-border); border-radius: 12px; }
+  .ref-box h3 { font-size: 14px; color: #8c5aff; margin-bottom: 10px; }
+  .ref-box p { font-size: 12px; color: var(--muted); margin-bottom: 15px; }
+  .ref-input { display: flex; gap: 10px; margin-bottom: 10px; }
+  .ref-input input { flex: 1; padding: 10px; background: rgba(0,0,0,0.4); border: 1px solid var(--glass-border); border-radius: 8px; color: var(--text); font-size: 12px; }
+  .ref-input button { width: auto; padding: 10px 15px; font-size: 12px; background: #8c5aff; }
+  .ref-stats { font-size: 12px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="header">
+    <h1>ZEUS<span>-X</span></h1>
+    <p>Личный кабинет</p>
+  </div>
+  <!-- Форма входа -->
+  <div id="login-section">
+    <div class="input-group">
+      <label>Ваш ключ доступа</label>
+      <input type="text" id="keyInput" placeholder="VANTA-XXXX-XXXX-XXXX" autocomplete="off">
+    </div>
+    <button class="btn" id="checkBtn">Проверить статус</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <!-- Блок с данными (появляется после ввода ключа) -->
+  <div id="profile">
+    <div class="row">
+      <div class="label">Ключ</div>
+      <div class="value" id="pKey">—</div>
+    </div>
+    <div class="row">
+      <div class="label">Статус</div>
+      <div class="value" id="pStatus">—</div>
+    </div>
+    <div class="row">
+      <div class="label">Осталось дней</div>
+      <div class="value" id="pDays">—</div>
+    </div>
+    <div class="row">
+      <div class="label">HWID</div>
+      <div class="value" id="pHwid">—</div>
+    </div>
+
+    <!-- Блок активации промокода -->
+    <div class="promo-box">
+      <label>Активировать промокод</label>
+      <div class="promo-row">
+        <input type="text" id="promoInput" placeholder="Введите код">
+        <button class="btn" id="promoBtn">Активировать</button>
+      </div>
+      <div class="msg" id="promoMsg" style="text-align: left; font-size: 12px; margin-top: 8px;"></div>
+    </div>
+
+    <!-- Блок реферальной системы -->
+    <div class="ref-box">
+      <h3>🤝 Партнерская программа</h3>
+      <p>Приглашай друзей и получай +3 дня к ключу за каждого!</p>
+      
+      <div class="ref-input">
+        <input type="text" id="refLink" readonly>
+        <button class="btn" onclick="copyRefLink()">Копировать</button>
+      </div>
+      
+      <div class="ref-stats">
+        Приглашено друзей: <span id="refCount" style="color: var(--green); font-weight: bold;">0</span> | 
+        Заработано дней: <span id="refEarned" style="color: var(--green); font-weight: bold;">0</span>
+      </div>
+    </div>
+
+    <!-- Кнопки управления -->
+    <div style="margin-top: 24px; display: flex; flex-direction: column; gap: 10px;">
+      <button class="btn blue" id="resetHwidBtn">Сбросить HWID</button>
+      <button class="btn green" id="downloadBtn">Скачать лоадер</button>
+      <button class="btn" id="logoutBtn" style="background: transparent; border: 1px solid var(--muted); color: var(--muted);">Выйти</button>
+    </div>
+  </div>
+</div>
+<script>
+  const SERVER = 'https://zeus-key-mjep.onrender.com';
+  const LOADER_URL = 'https://suspersuser-crypto.github.io/Zeus-key/loader.lua';
+
+  const keyInput = document.getElementById('keyInput');
+  const checkBtn = document.getElementById('checkBtn');
+  const msg = document.getElementById('msg');
+  const loginSection = document.getElementById('login-section');
+  const profile = document.getElementById('profile');
+
+  let currentKey = "";
+
+  async function fetchUserInfo(key) {
+    try {
+      const res = await fetch(SERVER + '/user/info?token=' + encodeURIComponent(key));
+      const data = await res.json();
+      return data;
+    } catch (e) {
+      return { ok: false, reason: 'network_error' };
+    }
+  }
+
+  // === ПРОВЕРКА КЛЮЧА ===
+  checkBtn.addEventListener('click', async () => {
+    const key = keyInput.value.trim();
+    if (!key) {
+      msg.style.color = '#ff5555';
+      msg.textContent = 'Введите ключ';
+      return;
+    }
+
+    checkBtn.disabled = true;
+    checkBtn.textContent = 'Загрузка...';
+    msg.textContent = '';
+
+    const data = await fetchUserInfo(key);
+
+    checkBtn.disabled = false;
+    checkBtn.textContent = 'Проверить статус';
+
+    if (!data.ok) {
+      msg.style.color = '#ff5555';
+      if (data.reason === 'invalid') msg.textContent = 'Ключ не найден';
+      else if (data.reason === 'network_error') msg.textContent = 'Сервер недоступен';
+      else msg.textContent = 'Ошибка: ' + (data.reason || 'неизвестная');
+      return;
+    }
+
+    currentKey = key;
+    loginSection.style.display = 'none';
+    profile.style.display = 'block';
+
+    document.getElementById('pKey').textContent = key;
+    
+    const statusEl = document.getElementById('pStatus');
+    if (data.banned) {
+      statusEl.textContent = 'Забанен';
+      statusEl.className = 'value red';
+    } else if (data.expired) {
+      statusEl.textContent = 'Истёк';
+      statusEl.className = 'value red';
+    } else if (!data.used) {
+      statusEl.textContent = 'Не активирован';
+      statusEl.className = 'value';
+    } else {
+      statusEl.textContent = 'Активен';
+      statusEl.className = 'value green';
+    }
+
+    document.getElementById('pDays').textContent = data.days_left + ' дн.';
+    
+    const hwidEl = document.getElementById('pHwid');
+    if (data.hwid) {
+      hwidEl.textContent = data.hwid.slice(0, 12) + '...';
+      hwidEl.className = 'value green';
+    } else {
+      hwidEl.textContent = 'Не привязан';
+      hwidEl.className = 'value';
+    }
+
+    loadReferral(); // Загружаем рефералку
+  });
+
+  keyInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') checkBtn.click();
+  });
+
+  // === СБРОС HWID ===
+  const resetHwidBtn = document.getElementById('resetHwidBtn');
+  resetHwidBtn.addEventListener('click', async () => {
+    if (!currentKey) return;
+    if (!confirm('Вы уверены, что хотите сбросить HWID?')) return;
+
+    resetHwidBtn.disabled = true;
+    resetHwidBtn.textContent = 'Сброс...';
+
+    try {
+      const res = await fetch(SERVER + '/hwid_reset?token=' + encodeURIComponent(currentKey));
+      const data = await res.json();
+
+      resetHwidBtn.disabled = false;
+      resetHwidBtn.textContent = 'Сбросить HWID';
+
+      if (data.ok && data.reset) {
+        msg.style.color = '#00e676';
+        msg.textContent = 'HWID успешно сброшен!';
+        document.getElementById('pHwid').textContent = 'Не привязан';
+        document.getElementById('pHwid').className = 'value';
+      } else if (data.ok && !data.reset) {
+        msg.style.color = '#ffaa00';
+        msg.textContent = 'Сброс будет доступен через ' + data.days_left + ' дн.';
+      } else {
+        msg.style.color = '#ff5555';
+        msg.textContent = 'Ошибка: ' + (data.reason || 'неизвестная');
+      }
+    } catch (e) {
+      resetHwidBtn.disabled = false;
+      resetHwidBtn.textContent = 'Сбросить HWID';
+      msg.style.color = '#ff5555';
+      msg.textContent = 'Сервер недоступен';
+    }
+  });
+
+  // === РЕФЕРАЛЬНАЯ СИСТЕМА ===
+  async function loadReferral() {
+    if (!currentKey) return;
+    try {
+      const res = await fetch(SERVER + '/referral/info?token=' + encodeURIComponent(currentKey));
+      const data = await res.json();
+      if (data.ok) {
+        document.getElementById('refCount').textContent = data.count;
+        document.getElementById('refEarned').textContent = data.earned_days;
+        
+        // Генерируем красивую ссылку (берем текущий домен + параметр ref)
+        const url = new URL(window.location.href);
+        url.pathname = url.pathname.replace('dashboard.html', 'index.html');
+        url.searchParams.set('ref', currentKey);
+        document.getElementById('refLink').value = url.toString();
+      }
+    } catch(e) {}
+  }
+
+  function copyRefLink() {
+    const input = document.getElementById('refLink');
+    input.select();
+    document.execCommand('copy');
+    alert('Ссылка скопирована!');
+  }
+
+  // === ПРОМОКОД ===
+  const promoBtn = document.getElementById('promoBtn');
+  const promoMsg = document.getElementById('promoMsg');
+  
+  promoBtn.addEventListener('click', async () => {
+    const code = document.getElementById('promoInput').value.trim().toUpperCase();
+    if (!code) {
+      promoMsg.style.color = '#ff5555';
+      promoMsg.textContent = 'Введите код';
+      return;
+    }
+    
+    promoBtn.disabled = true;
+    promoBtn.textContent = '...';
+    
+    try {
+      const res = await fetch(SERVER + '/redeem_promo?token=' + encodeURIComponent(currentKey) + '&code=' + encodeURIComponent(code));
+      const data = await res.json();
+      
+      promoBtn.disabled = false;
+      promoBtn.textContent = 'Активировать';
+      
+      if (data.ok) {
+        promoMsg.style.color = '#00e676';
+        promoMsg.textContent = 'Успешно! Добавлено ' + data.days + ' дней.';
+        document.getElementById('promoInput').value = '';
+        
+        // Обновляем данные
+        const info = await fetchUserInfo(currentKey);
+        if (info.ok) document.getElementById('pDays').textContent = info.days_left + ' дн.';
+      } else {
+        promoMsg.style.color = '#ff5555';
+        if (data.reason === 'invalid_promo') promoMsg.textContent = 'Неверный промокод';
+        else if (data.reason === 'promo_exhausted') promoMsg.textContent = 'Этот промокод больше не работает';
+        else if (data.reason === 'banned') promoMsg.textContent = 'Ваш ключ забанен';
+        else promoMsg.textContent = 'Ошибка: ' + data.reason;
+      }
+    } catch (e) {
+      promoBtn.disabled = false;
+      promoBtn.textContent = 'Активировать';
+      promoMsg.style.color = '#ff5555';
+      promoMsg.textContent = 'Сервер недоступен';
+    }
+  });
+
+  // === СКАЧИВАНИЕ ЛОАДЕРА ===
+  const downloadBtn = document.getElementById('downloadBtn');
+  downloadBtn.addEventListener('click', () => {
+    const code = 'loadstring(game:HttpGet("' + LOADER_URL + '"))()';
+    navigator.clipboard.writeText(code).then(() => {
+      downloadBtn.textContent = 'Скопировано!';
+      setTimeout(() => { downloadBtn.textContent = 'Скачать лоадер'; }, 2000);
+    });
+  });
+
+  // === ВЫХОД ===
+  const logoutBtn = document.getElementById('logoutBtn');
+  logoutBtn.addEventListener('click', () => {
+    currentKey = "";
+    keyInput.value = "";
+    loginSection.style.display = 'block';
+    profile.style.display = 'none';
+    msg.textContent = "";
+    promoMsg.textContent = "";
+  });
+</script>
+</body>
+</html>
