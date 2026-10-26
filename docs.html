@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zeus-X · Документация</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+  
+  :root {
+    --bg: #030305; --panel: #0a0612; --accent: #8c5aff; --text: #ffffff; --muted: #8e8e99; --border: rgba(140, 90, 255, 0.2);
+  }
+
+  body { background: var(--bg); color: var(--text); min-height: 100vh; padding: 40px 20px; }
+  
+  .container { max-width: 800px; margin: 0 auto; }
+  
+  .header { text-align: center; margin-bottom: 40px; }
+  .header h1 { font-size: 36px; font-weight: 900; background: linear-gradient(90deg, #b482ff, #ff2a2a); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+  .header p { color: var(--muted); font-size: 14px; }
+  
+  .card { background: rgba(20, 15, 30, 0.6); border: 1px solid var(--border); border-radius: 16px; padding: 30px; margin-bottom: 20px; transition: 0.3s; }
+  .card:hover { border-color: var(--accent); }
+  
+  .card h2 { font-size: 20px; color: var(--accent); margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+  .card h3 { font-size: 16px; margin: 20px 0 10px 0; color: #fff; }
+  .card p { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 15px; }
+  
+  .step { display: flex; gap: 15px; margin-bottom: 20px; }
+  .step-num { width: 30px; height: 30px; background: var(--accent); color: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 800; flex-shrink: 0; }
+  .step-text { color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .step-text b { color: white; }
+  
+  code { background: rgba(0,0,0,0.5); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #b482ff; }
+  
+  .btn { display: inline-block; padding: 12px 24px; background: var(--accent); color: white; text-decoration: none; border-radius: 8px; font-weight: 700; margin-top: 10px; transition: 0.3s; }
+  .btn:hover { box-shadow: 0 0 20px var(--accent); transform: translateY(-2px); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>ZEUS-X · DOCS</h1>
+    <p>Полное руководство по установке и использованию</p>
+  </div>
+
+  <!-- БЛОК 1: УСТАНОВКА -->
+  <div class="card">
+    <h2>📥 Установка</h2>
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-text"><b>Скачай инжектор.</b> Перейди на главную страницу и нажми «Скачать инжектор (ZIP)». Распакуй архив.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text"><b>Запусти игру.</b> Открой Roblox и зайди на любой сервер.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text"><b>Открой инжектор.</b> Запусти файл инжектора от имени администратора и выбери процесс Roblox.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-text"><b>Вставь лоадер.</b> Скопируй код лоадера с нашего сайта и вставь его в инжектор.</div>
+    </div>
+  </div>
+<!-- БЛОК 2: АКТИВАЦИЯ КЛЮЧА -->
+<div class="card">
+  <h2>🔑 Активация ключа</h2>
+  <p>Ключ — это твой доступ к функциям чита. Без него скрипт не запустится.</p>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-text"><b>Купи или получи ключ.</b> Ключи выдаются в нашем Telegram-канале <a href="https://t.me/noir_xis" target="_blank" style="color: var(--accent);">@noir_xis</a>.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-text"><b>Вставь ключ.</b> При первом запуске скрипта откроется окно, куда нужно вставить ключ (формата <code>VANTA-XXXX-XXXX-XXXX</code>).</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-text"><b>Готово.</b> После успешной проверки откроется меню чита. Ключ привязывается к твоему устройству (HWID).</div>
+  </div>
+</div>
+
+<!-- БЛОК 3: СБРОС HWID -->
+<div class="card">
+  <h2>📱 Сброс HWID</h2>
+  <p>Если ты сменил компьютер или телефон, ключ может не работать, так как он привязан к старому устройству.</p>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-text"><b>Зайди в Личный кабинет.</b> Перейди на страницу <code>dashboard.html</code> и введи свой ключ.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-text"><b>Нажми «Сбросить HWID».</b> Система отвяжет ключ от старого устройства.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-text"><b>Перезапусти игру.</b> Теперь ключ привяжется к новому устройству.</div>
+  </div>
+  <p style="font-size: 12px; margin-top: 10px;">⚠️ <i>Сброс доступен раз в 30 дней.</i></p>
+</div>
+
+<!-- БЛОК 4: FAQ -->
+<div class="card">
+  <h2>❓ Частые вопросы</h2>
+  <h3>Почему скрипт не запускается?</h3>
+  <p>Проверь, что ты используешь поддерживаемый инжектор (Xeno, Wave) и что игра обновлена. Также убедись, что ключ введен верно.</p>
+  
+  <h3>Что делать, если ключ «просрочен»?</h3>
+  <p>Значит, срок действия ключа истек. Приобрети новый ключ в Telegram-канале.</p>
+  
+  <h3>Забанят ли меня?</h3>
+  <p>Использование любых сторонних программ несет риск. Мы рекомендуем использовать альт-аккаунты и не заходить на основной аккаунт.</p>
+  
+  <h3>Где взять промокод?</h3>
+  <p>Промокоды выдает наш Telegram-бот при первом запуске, а также мы публикуем их в канале в честь праздников или обновлений.</p>
+</div>
+  <!-- БЛОК 5: ССЫЛКИ -->
+  <div style="text-align: center; margin-top: 40px;">
+    <a href="index.html" class="btn">← Вернуться на главную</a>
+    <a href="dashboard.html" class="btn" style="background: transparent; border: 1px solid var(--border); margin-left: 10px;">Личный кабинет →</a>
+  </div>
+
+  <div style="text-align: center; color: var(--muted); font-size: 12px; margin-top: 30px;">
+    Zeus-X © 2026 · Если остались вопросы — пиши в Telegram: <a href="https://t.me/noir_xis" target="_blank" style="color: var(--accent); text-decoration: none;">@noir_xis</a>
+  </div>
+
+</div>
+</body>
+</html>
