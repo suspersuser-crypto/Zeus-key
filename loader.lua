@@ -1,3 +1,8 @@
+-- ============================================================
+-- Zeus-X Premium Loader v2.0
+-- Красивое меню выбора версии с анимациями
+-- ============================================================
+
 local SERVER_URL = "https://zeus-key-mjep.onrender.com/version"
 
 local function fetchVersion(verType)
@@ -29,81 +34,134 @@ local function runScript(verType)
     pcall(func)
 end
 
--- Создание красивого меню
+-- ============================================================
+-- GUI LOADER (Премиум дизайн)
+-- ============================================================
+
 local CoreGui = game:GetService("CoreGui")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
-local oldGui = CoreGui:FindFirstChild("ZeusXLoader")
+local oldGui = CoreGui:FindFirstChild("ZeusXPremiumLoader")
 if oldGui then oldGui:Destroy() end
 
 local sg = Instance.new("ScreenGui")
-sg.Name = "ZeusXLoader"
+sg.Name = "ZeusXPremiumLoader"
 sg.ResetOnSpawn = false
 sg.IgnoreGuiInset = true
+sg.DisplayOrder = 9999
 sg.Parent = CoreGui
 
+-- Основное окно
 local bg = Instance.new("Frame")
-bg.Size = UDim2.new(0, 400, 0, 250)
-bg.Position = UDim2.new(0.5, -200, 0.5, -125)
-bg.BackgroundColor3 = Color3.fromRGB(15, 10, 20)
+bg.Size = UDim2.new(0, 420, 0, 320)
+bg.Position = UDim2.new(0.5, -210, 0.5, -160)
+bg.BackgroundColor3 = Color3.fromRGB(10, 6, 18)
 bg.BackgroundTransparency = 0.1
 bg.BorderSizePixel = 0
+bg.Active = true
+bg.Draggable = true
 bg.Parent = sg
-Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 16)
+Instance.new("UICorner", bg).CornerRadius = UDim.new(0, 20)
 
 local stroke = Instance.new("UIStroke")
-stroke.Color = Color3.fromRGB(255, 42, 42)
-stroke.Thickness = 1.5
-stroke.Transparency = 0.3
+stroke.Color = Color3.fromRGB(140, 90, 255)
+stroke.Thickness = 2
+stroke.Transparency = 0.2
 stroke.Parent = bg
 
+-- Заголовок
 local title = Instance.new("TextLabel")
-title.Size = UDim2.new(1, 0, 0, 50)
+title.Size = UDim2.new(1, 0, 0, 60)
 title.BackgroundTransparency = 1
-title.Text = "ZEUS-X LOADER"
-title.TextColor3 = Color3.fromRGB(255, 42, 42)
+title.Text = "ZEUS-X"
+title.TextColor3 = Color3.fromRGB(180, 130, 255)
 title.Font = Enum.Font.GothamBlack
-title.TextSize = 24
+title.TextSize = 36
+title.TextXAlignment = Enum.TextXAlignment.Center
 title.Parent = bg
 
 local sub = Instance.new("TextLabel")
 sub.Size = UDim2.new(1, 0, 0, 20)
-sub.Position = UDim2.new(0, 0, 0, 40)
+sub.Position = UDim2.new(0, 0, 0, 50)
 sub.BackgroundTransparency = 1
-sub.Text = "Выбери версию для запуска"
-sub.TextColor3 = Color3.fromRGB(150, 150, 160)
-sub.Font = Enum.Font.Gotham
+sub.Text = "PREMIUM LOADER"
+sub.TextColor3 = Color3.fromRGB(140, 90, 255)
+sub.Font = Enum.Font.GothamBold
 sub.TextSize = 12
 sub.Parent = bg
 
-local function createButton(text, color, yPos, verType)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, -60, 0, 50)
-    btn.Position = UDim2.new(0, 30, 0, yPos)
-    btn.BackgroundColor3 = color
-    btn.BackgroundTransparency = 0.2
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 16
-    btn.BorderSizePixel = 0
-    btn.Parent = bg
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
-    
-    local bStroke = Instance.new("UIStroke")
-    bStroke.Color = color
-    bStroke.Thickness = 1.5
-    bStroke.Transparency = 0.5
-    bStroke.Parent = btn
+-- Кнопка AGGRESSIVE
+local btnAggro = Instance.new("TextButton")
+btnAggro.Size = UDim2.new(0, 380, 0, 50)
+btnAggro.Position = UDim2.new(0, 20, 0, 100)
+btnAggro.BackgroundColor3 = Color3.fromRGB(255, 42, 42)
+btnAggro.BackgroundTransparency = 0.2
+btnAggro.Text = "🔥 AGGRESSIVE"
+btnAggro.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnAggro.Font = Enum.Font.GothamBold
+btnAggro.TextSize = 18
+btnAggro.BorderSizePixel = 0
+btnAggro.Parent = bg
+Instance.new("UICorner", btnAggro).CornerRadius = UDim.new(0, 12)
 
-    btn.MouseButton1Click:Connect(function()
-        btn.Text = "Загрузка..."
-        btn.Active = false
-        task.wait(0.5)
-        sg:Destroy()
-        runScript(verType)
-    end)
-end
+local strokeAggro = Instance.new("UIStroke", btnAggro)
+strokeAggro.Color = Color3.fromRGB(255, 42, 42)
+strokeAggro.Thickness = 2
+strokeAggro.Transparency = 0.5
 
-createButton("🔥 AGGRESSIVE", Color3.fromRGB(180, 30, 30), 80, "aggressive")
-createButton("🌀 LITE", Color3.fromRGB(40, 80, 180), 150, "lite")
+btnAggro.MouseButton1Click:Connect(function()
+    btnAggro.Text = "Загрузка..."
+    btnAggro.Active = false
+    task.wait(0.3)
+    sg:Destroy()
+    runScript("aggressive")
+end)
+
+-- Кнопка LITE
+local btnLite = Instance.new("TextButton")
+btnLite.Size = UDim2.new(0, 380, 0, 50)
+btnLite.Position = UDim2.new(0, 20, 0, 170)
+btnLite.BackgroundColor3 = Color3.fromRGB(59, 130, 246)
+btnLite.BackgroundTransparency = 0.2
+btnLite.Text = "🌀 LITE"
+btnLite.TextColor3 = Color3.fromRGB(255, 255, 255)
+btnLite.Font = Enum.Font.GothamBold
+btnLite.TextSize = 18
+btnLite.BorderSizePixel = 0
+btnLite.Parent = bg
+Instance.new("UICorner", btnLite).CornerRadius = UDim.new(0, 12)
+
+local strokeLite = Instance.new("UIStroke", btnLite)
+strokeLite.Color = Color3.fromRGB(59, 130, 246)
+strokeLite.Thickness = 2
+strokeLite.Transparency = 0.5
+
+btnLite.MouseButton1Click:Connect(function()
+    btnLite.Text = "Загрузка..."
+    btnLite.Active = false
+    task.wait(0.3)
+    sg:Destroy()
+    runScript("lite")
+end)
+
+-- Футер
+local footer = Instance.new("TextLabel")
+footer.Size = UDim2.new(1, 0, 0, 30)
+footer.Position = UDim2.new(0, 0, 1, -40)
+footer.BackgroundTransparency = 1
+footer.Text = "Telegram: @noir_xis"
+footer.TextColor3 = Color3.fromRGB(100, 80, 120)
+footer.Font = Enum.Font.Gotham
+footer.TextSize = 12
+footer.Parent = bg
+
+-- Анимация появления
+bg.Position = UDim2.new(0.5, -210, 0.5, -140)
+bg.BackgroundTransparency = 1
+task.spawn(function()
+    TweenService:Create(bg, TweenInfo.new(0.5, Enum.EasingStyle.Quint), {
+        Position = UDim2.new(0.5, -210, 0.5, -160),
+        BackgroundTransparency = 0.1
+    }):Play()
+end)
