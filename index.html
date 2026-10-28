@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zeus-X · Premium Script для Roblox</title>
+<meta name="description" content="Zeus-X — премиум-софт для Roblox: Aimbot, Silent Aim, ESP, Wallhack. Ключи и промокоды.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+  
+  :root {
+    --bg: #030305;
+    --glass: rgba(20, 20, 25, 0.45);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #ffffff;
+    --muted: #8e8e99;
+    --red: #ff2a2a;
+    --glow-red: rgba(255, 42, 42, 0.4);
+    --green: #00e676;
+    --purple: #8c5aff;
+  }
+
+  body {
+    background-color: var(--bg); color: var(--text); min-height: 100vh;
+    display: flex; justify-content: center; padding: 40px 20px; overflow-x: hidden;
+    background-image: radial-gradient(circle at 50% 0%, rgba(140, 90, 255, 0.08) 0%, transparent 60%);
+  }
+
+  .container { width: 100%; max-width: 900px; z-index: 1; position: relative; }
+  
+  header { text-align: center; margin-bottom: 50px; }
+  .logo { font-size: 64px; font-weight: 900; letter-spacing: -3px; line-height: 1; margin-bottom: 16px; }
+  .logo span { color: var(--red); text-shadow: 0 0 50px var(--glow-red); }
+  .subtitle { color: var(--muted); font-size: 14px; letter-spacing: 6px; text-transform: uppercase; font-weight: 600; }
+
+  .glass {
+    background: var(--glass); backdrop-filter: blur(24px); border: 1px solid var(--border);
+    border-radius: 28px; padding: 36px; margin-bottom: 24px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05);
+    animation: fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+  .title { font-size: 20px; font-weight: 800; margin-bottom: 28px; display: flex; align-items: center; gap: 14px; }
+  .title::before { content: ''; width: 5px; height: 22px; background: var(--purple); border-radius: 4px; box-shadow: 0 0 15px var(--purple); }
+
+  /* Гейт */
+  .gate-screen { position: fixed; inset: 0; z-index: 9999; background: var(--bg); display: flex; align-items: center; justify-content: center; transition: opacity 0.5s; }
+  .gate-screen.hidden { opacity: 0; pointer-events: none; }
+  .gate-box { background: rgba(18, 15, 26, 0.8); backdrop-filter: blur(20px); border: 1px solid var(--purple); border-radius: 24px; padding: 50px 40px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+  .gate-logo { font-size: 36px; font-weight: 900; margin-bottom: 10px; }
+  .gate-logo span { color: var(--red); text-shadow: 0 0 20px var(--glow-red); }
+  .gate-sub { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 30px; }
+  .gate-input { width: 100%; padding: 16px; background: rgba(0,0,0,0.5); border: 1px solid rgba(140, 90, 255, 0.3); border-radius: 12px; color: white; font-family: monospace; font-size: 16px; text-align: center; margin-bottom: 20px; outline: none; }
+  .gate-input:focus { border-color: var(--purple); box-shadow: 0 0 20px rgba(140,90,255,0.3); }
+  .gate-btn { width: 100%; padding: 16px; background: var(--purple); border: none; border-radius: 12px; color: white; font-weight: 800; font-size: 15px; cursor: pointer; text-transform: uppercase; }
+  .gate-btn:hover { background: #6b3fc2; }
+  .gate-msg { margin-top: 15px; font-size: 13px; font-weight: 600; min-height: 18px; }
+
+  .btn { display: flex; align-items: center; justify-content: center; width: 100%; padding: 18px; border-radius: 14px; font-size: 14px; font-weight: 800; text-transform: uppercase; cursor: pointer; transition: all 0.3s; border: 1px solid transparent; text-decoration: none; }
+  .btn-purple { background: rgba(140, 90, 255, 0.15); color: #b482ff; border-color: rgba(140, 90, 255, 0.3); }
+  .btn-purple:hover { background: rgba(140, 90, 255, 0.25); }
+  .btn-red { background: rgba(255, 42, 42, 0.15); color: #ff5555; border-color: rgba(255, 42, 42, 0.3); }
+  .btn-red:hover { background: rgba(255, 42, 42, 0.25); }
+</style>
+</head>
+<body>
+<!-- ГЕЙТ -->
+<div class="gate-screen" id="gateScreen">
+  <div class="gate-box">
+    <h1 class="gate-logo">ZEUS<span>-X</span></h1>
+    <div class="gate-sub">Restricted Access</div>
+    <input type="text" class="gate-input" id="gateKeyInput" placeholder="VANTA-XXXX-XXXX-XXXX" autocomplete="off">
+    <button class="gate-btn" id="gateBtn">Разблокировать</button>
+    <div class="gate-msg" id="gateMsg"></div>
+  </div>
+</div>
+
+<!-- КОНТЕНТ -->
+<div class="container">
+  <header>
+    <h1 class="logo">ZEUS<span>-X</span></h1>
+    <div class="subtitle">Premium Roblox Software</div>
+    <div style="margin-top: 20px;">
+      <a href="dashboard.html" style="display: inline-block; padding: 10px 20px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; color: var(--text); text-decoration: none; font-size: 13px; font-weight: 700;">
+        👤 Личный кабинет
+      </a>
+    </div>
+  </header>
+
+  <div class="glass">
+    <div class="title">Выбери версию</div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      
+      <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 20px; padding: 28px;">
+        <div style="font-size: 22px; font-weight: 800; margin-bottom: 8px; display: flex; justify-content: space-between; color: #60a5fa;">
+          LITE <span style="font-size: 11px; padding: 4px 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: var(--muted); font-weight: 700;">v3.4</span>
+        </div>
+        <div style="font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; min-height: 45px;">Максимальная стабильность. 14 модулей. Идеально для мобильных устройств и слабых ПК.</div>
+        <button class="btn btn-purple" id="btnLite">Скопировать Loader</button>
+      </div>
+
+      <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 20px; padding: 28px;">
+        <div style="font-size: 22px; font-weight: 800; margin-bottom: 8px; display: flex; justify-content: space-between; color: #ff5555;">
+          AGGRESSIVE <span style="font-size: 11px; padding: 4px 10px; border-radius: 8px; background: rgba(255,255,255,0.1); color: var(--muted); font-weight: 700;">v1.0</span>
+        </div>
+        <div style="font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 24px; min-height: 45px;">Максимальная мощь. 10 модулей. Жёсткий Aimbot, Silent Aim и Trigger.</div>
+        <button class="btn btn-red" id="btnAggro">Скопировать Loader</button>
+      </div>
+      
+    </div>
+
+    <!-- Инжектор -->
+    <div style="margin-top: 30px; text-align: center;">
+      <a href="https://www.mediafire.com/file/sv00f7x077khyby/Zeus+0.6.24.zip/file" target="_blank" style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #8a6a20, #d4a040); color: #000; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
+        📥 Скачать инжектор (ZIP)
+      </a>
+    </div>
+  </div>
+<div class="glass">
+  <div class="title">Что внутри</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+    <div style="font-size: 14px; color: var(--muted); padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px;">✦ Aimbot (Head / Camera)</div>
+    <div style="font-size: 14px; color: var(--muted); padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px;">✦ Silent Aim (100% Hit)</div>
+    <div style="font-size: 14px; color: var(--muted); padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px;">✦ Triggerbot (Instant)</div>
+    <div style="font-size: 14px; color: var(--muted); padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px;">✦ ESP (Box, HP, Dist)</div>
+    <div style="font-size: 14px; color: var(--muted); padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px;">✦ Skeleton (R6/R15)</div>
+    <div style="font-size: 14px; color: var(--muted); padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px;">✦ Chams (AlwaysOnTop)</div>
+    <div style="font-size: 14px; color: var(--muted); padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px;">✦ Wallhack (Full-Clear)</div>
+    <div style="font-size: 14px; color: var(--muted); padding: 10px; background: rgba(255,255,255,0.02); border-radius: 10px;">✦ Speed / Fly / Noclip</div>
+  </div>
+</div>
+
+<div class="glass">
+  <div class="title">Отзывы</div>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+    <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 16px;">
+      <div style="color: #ffd700; margin-bottom: 8px;">★★★★★</div>
+      <div style="font-size: 14px; font-style: italic; margin-bottom: 10px;">"Самый стабильный чит. Сижу 2 месяца, бана нет."</div>
+      <div style="font-size: 12px; color: var(--muted);">— @Rick_Sanchez</div>
+    </div>
+    <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 16px;">
+      <div style="color: #ffd700; margin-bottom: 8px;">★★★★★</div>
+      <div style="font-size: 14px; font-style: italic; margin-bottom: 10px;">"Купил на 30 дней, не пожалел. Trigger не палится."</div>
+      <div style="font-size: 12px; color: var(--muted);">— @Morty_2077</div>
+    </div>
+  </div>
+</div>
+
+<div class="glass">
+  <div class="title">Live Статистика</div>
+  <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+    <div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 15px;">
+      <div style="font-size: 28px; font-weight: 900; color: var(--green);" id="stOnline">0</div>
+      <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Онлайн</div>
+    </div>
+    <div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 15px;">
+      <div style="font-size: 28px; font-weight: 900; color: var(--purple);" id="stKeys">0</div>
+      <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Ключей</div>
+    </div>
+    <div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 15px;">
+      <div style="font-size: 28px; font-weight: 900; color: var(--text);" id="stUptime">—</div>
+      <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Аптайм</div>
+    </div>
+    <div style="text-align: center; padding: 20px; background: rgba(255,255,255,0.02); border-radius: 15px;">
+      <div style="font-size: 28px; font-weight: 900; color: var(--blue);" id="stActs">0</div>
+      <div style="font-size: 11px; color: var(--muted); text-transform: uppercase;">Активаций</div>
+    </div>
+  </div>
+</div>
+
+<div class="glass">
+  <div class="title">FAQ</div>
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    <div>
+      <div style="font-weight: 700; color: var(--red); margin-bottom: 6px;">Попадёт ли аккаунт в бан?</div>
+      <div style="color: var(--muted); font-size: 14px; line-height: 1.6;">Roblox детектит инжект. Вероятность бана есть. Используй альт-аккаунт.</div>
+    </div>
+    <div>
+      <div style="font-weight: 700; color: var(--red); margin-bottom: 6px;">Где получить ключ?</div>
+      <div style="color: var(--muted); font-size: 14px; line-height: 1.6;">В Telegram-канале <a href="https://t.me/noir_xis" target="_blank" style="color: var(--red);">@noir_xis</a>.</div>
+    </div>
+  </div>
+</div>
+  <div class="glass">
+    <div class="title">Ссылки</div>
+    <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+      <a href="https://t.me/noir_xis" target="_blank" style="flex: 1; min-width: 120px; display: flex; justify-content: center; padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 700;">
+        Telegram
+      </a>
+      <a href="docs.html" style="flex: 1; min-width: 120px; display: flex; justify-content: center; padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 700;">
+        Документация
+      </a>
+      <a href="dashboard.html" style="flex: 1; min-width: 120px; display: flex; justify-content: center; padding: 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 16px; color: var(--muted); text-decoration: none; font-size: 12px; font-weight: 700;">
+        Кабинет
+      </a>
+    </div>
+  </div>
+
+  <footer style="text-align: center; color: var(--muted); font-size: 13px; padding: 40px 0;">
+    Zeus-X © 2026 · Built for <a href="https://t.me/noir_xis" style="color: var(--red); text-decoration: none;">@noir_xis</a>
+  </footer>
+</div>
+
+<script>
+  const SERVER = 'https://zeus-key-mjep.onrender.com';
+  const LOADER_URL = 'https://suspersuser-crypto.github.io/Zeus-key/loader.lua';
+
+  // === ГЕЙТ ===
+  const gateScreen = document.getElementById('gateScreen');
+  const gateKeyInput = document.getElementById('gateKeyInput');
+  const gateBtn = document.getElementById('gateBtn');
+  const gateMsg = document.getElementById('gateMsg');
+
+  gateBtn.addEventListener('click', async function () {
+    const key = gateKeyInput.value.trim();
+    if (!key) return;
+    gateBtn.disabled = true;
+    gateBtn.textContent = 'Проверка...';
+    gateMsg.textContent = '';
+
+    try {
+      const r = await fetch(SERVER + '/check?token=' + encodeURIComponent(key) + '&hwid=web&username=web&ver=web');
+      const d = await r.json();
+      if (d.ok) {
+        gateMsg.style.color = '#00e676';
+        gateMsg.textContent = 'Доступ разрешён';
+        setTimeout(() => gateScreen.classList.add('hidden'), 600);
+      } else {
+        gateMsg.style.color = '#ff5555';
+        gateMsg.textContent = 'Ошибка: ' + (d.reason || 'неверный ключ');
+      }
+    } catch (e) {
+      gateMsg.style.color = '#ff5555';
+      gateMsg.textContent = 'Сервер недоступен';
+    }
+    gateBtn.disabled = false;
+    gateBtn.textContent = 'Разблокировать';
+  });
+
+  gateKeyInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') gateBtn.click(); });
+
+  // === РЕФЕРАЛКА ===
+  const urlParams = new URLSearchParams(window.location.search);
+  const refCode = urlParams.get('ref');
+  if (refCode) localStorage.setItem('zeus_ref', refCode);
+
+  // === ЛОАДЕР ===
+  function copyLoader(url, btn) {
+    const code = 'loadstring(game:HttpGet("' + url + '"))()';
+    navigator.clipboard.writeText(code).then(() => {
+      const original = btn.textContent;
+      btn.textContent = 'Скопировано!';
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    });
+  }
+  document.getElementById('btnLite').addEventListener('click', function() { copyLoader(LOADER_URL, this); });
+  document.getElementById('btnAggro').addEventListener('click', function() { copyLoader(LOADER_URL, this); });
+
+  // === СТАТИСТИКА ===
+  async function loadStatus() {
+    try {
+      const r = await fetch(SERVER + '/status');
+      const d = await r.json();
+      if (d.ok) {
+        document.getElementById('stOnline').textContent = d.online_5min || 0;
+        document.getElementById('stKeys').textContent = d.active_keys || 0;
+        document.getElementById('stUptime').textContent = d.uptime_human || '—';
+        document.getElementById('stActs').textContent = d.total_activations || 0;
+      }
+    } catch (e) {}
+  }
+  loadStatus();
+  setInterval(loadStatus, 60000);
+</script>
+</body>
+</html>
